@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"log"
 	"sync"
 
@@ -23,8 +24,9 @@ type Config struct {
 	// Redis
 	RedisDatabase int    `envconfig:"REDIS_DATABASE" required:"true"`
 	RedisHost     string `envconfig:"REDIS_HOST" required:"true"`
-	RedisUsername string `envconfig:"REDIS_PORT" required:"true"`
-	RedisPassword string `envconfig:"REDIS_USERNAME" required:"true"`
+	RedisPort     string `envconfig:"REDIS_PORT" required:"true"`
+	RedisUsername string `envconfig:"REDIS_USERNAME" required:"true"`
+	RedisPassword string `envconfig:"REDIS_PASSWORD" required:"true"`
 
 	// Auth
 	SecretKey string `envconfig:"SECRET_KEY" required:"true"`
@@ -35,6 +37,17 @@ type Config struct {
 
 	//Logging
 	LogLevel string `envconfig:"LOG_LEVEL" default:"error"`
+}
+
+func (c *Config) PostgresDSN() string {
+	return fmt.Sprintf(
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		c.PostgresHost, c.PostgresPort, c.PostgresUser, c.PostgresPassword, c.PostgresDB,
+	)
+}
+
+func (c *Config) RedisAddr() string {
+	return fmt.Sprintf("%s:%d", c.RedisHost, c.RedisPort)
 }
 
 func Load() (*Config, error) {
