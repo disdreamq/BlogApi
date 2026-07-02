@@ -24,7 +24,7 @@ type Config struct {
 	// Redis
 	RedisDatabase int    `envconfig:"REDIS_DATABASE" required:"true"`
 	RedisHost     string `envconfig:"REDIS_HOST" required:"true"`
-	RedisPort     string `envconfig:"REDIS_PORT" required:"true"`
+	RedisPort     int    `envconfig:"REDIS_PORT" required:"true"`
 	RedisUsername string `envconfig:"REDIS_USERNAME" required:"true"`
 	RedisPassword string `envconfig:"REDIS_PASSWORD" required:"true"`
 
