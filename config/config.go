@@ -50,7 +50,7 @@ func (c *Config) RedisAddr() string {
 	return fmt.Sprintf("%s:%d", c.RedisHost, c.RedisPort)
 }
 
-func Load() (*Config, error) {
+func Load() *Config {
 	once.Do(func() {
 		var err error
 		err = envconfig.Process("", &cfg)
@@ -58,5 +58,5 @@ func Load() (*Config, error) {
 			log.Fatalf("config error: %v", err)
 		}
 	})
-	return &cfg, nil
+	return &cfg
 }
