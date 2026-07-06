@@ -48,6 +48,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, username, email, passwo
 	query := `
         INSERT INTO users (username, email, password_hash)
         VALUES ($1, $2, $3)
+		ON CONFLICT (email) DO NOTHING
         RETURNING id
     `
 	var id int64
@@ -62,7 +63,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, username, email, passwo
 	return id, nil
 }
 
-func (r *UserRepository) ReadUser(ctx context.Context, userID int64) (*domain.User, error) {
+func (r *UserRepository) GetUserByID(ctx context.Context, userID int64) (*domain.User, error) {
 	txCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
@@ -72,6 +73,22 @@ func (r *UserRepository) ReadUser(ctx context.Context, userID int64) (*domain.Us
     `
 	var user userRow
 	err := r.db.GetContext(txCtx, &user, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	return user.toDomain(), nil
+}
+
+func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*domain.User, error) {
+	txCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
+
+	query := `
+        SELECT * FROM users
+        WHERE email = $1
+    `
+	var user userRow
+	err := r.db.GetContext(txCtx, &user, query, email)
 	if err != nil {
 		return nil, err
 	}
