@@ -10,21 +10,18 @@ type User struct {
 	CreatedAt    time.Time `json:"created_at"`
 }
 
-func (u *User) NewUser(userName, email, password string) (*User, error) {
+func NewUser(userName, email, passwordHash string) (*User, error) {
 	if userName == "" || len(userName) > 30 {
 		return nil, ErrInvalidUserName
 	}
 	if email == "" {
 		return nil, ErrInvalidEmail
 	}
-	if password == "" || len(password) < 8 || len(password) > 30 {
-		return nil, ErrInvalidPassword
-	}
 
 	return &User{
 		Username:     userName,
 		Email:        email,
-		PasswordHash: password,
+		PasswordHash: passwordHash,
 		CreatedAt:    time.Now(),
 	}, nil
 }

@@ -11,7 +11,7 @@ type Post struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-func (*Post) NewPost(userID int64, title, content string) (*Post, error) {
+func NewPost(userID int64, title, content string) (*Post, error) {
 	if title == "" || len(title) > 100 {
 		return nil, ErrInvalidTitle
 
