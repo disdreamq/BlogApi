@@ -34,7 +34,7 @@ func NewUserRepository(db *sqlx.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-func (r *UserRepository) CreateUser(ctx context.Context, username, email, passwordHash string) (int64, error) {
+func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) (int64, error) {
 
 	tx, err := r.db.Beginx()
 	if err != nil {
@@ -52,7 +52,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, username, email, passwo
         RETURNING id
     `
 	var id int64
-	err = tx.GetContext(txCtx, &id, query, username, email, passwordHash)
+	err = tx.GetContext(txCtx, &id, query, user.Username, user.Email, user.PasswordHash)
 	if err != nil {
 		return -1, err
 	}

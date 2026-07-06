@@ -36,7 +36,7 @@ func NewPostRepository(db *sqlx.DB) *PostRepository {
 	return &PostRepository{db: db}
 }
 
-func (r *PostRepository) CreatePost(ctx context.Context, userID int64, title, content string) (int64, error) {
+func (r *PostRepository) CreatePost(ctx context.Context, post *domain.Post) (int64, error) {
 
 	tx, err := r.db.Beginx()
 	if err != nil {
@@ -53,7 +53,7 @@ func (r *PostRepository) CreatePost(ctx context.Context, userID int64, title, co
         RETURNING id
     `
 	var id int64
-	err = tx.GetContext(txCtx, &id, query, userID, title, content)
+	err = tx.GetContext(txCtx, &id, query, post.UserID, post.Title, post.Content)
 	if err != nil {
 		return -1, err
 	}
@@ -78,6 +78,22 @@ func (r *PostRepository) ReadPost(ctx context.Context, userID int64) (*domain.Po
 		return nil, err
 	}
 	return post.toDomain(), nil
+}
+
+func (r *PostRepository) ReadAllUserPosts(ctx context.Context, userID int64) ([]*domain.Post, error) {
+	txCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
+
+	query := `
+		SELECT * FROM posts
+		WHERE user_id = $1
+	`
+	var posts []*domain.Post
+	err := r.db.SelectContext(txCtx, &posts, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	return posts, nil
 }
 
 func (r *PostRepository) UpdatePost(ctx context.Context, post *domain.Post) error {
