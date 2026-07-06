@@ -1,25 +1,27 @@
 package port
 
 import (
+	"context"
+
 	"github.com/disdreamq/BlogApi/internal/domain"
 )
 
 type UserReaderByID interface {
-	GetUserByID(userID int64) (*domain.User, error)
+	GetUserByID(ctx context.Context, userID int64) (*domain.User, error)
 }
 type UserReaderByEmail interface {
-	GetUserByEmail(email string) (*domain.User, error)
+	GetUserByEmail(ctx context.Context, email string) (*domain.User, error)
 }
 
 type UserCreater interface {
-	CreateUser(username, email, password string) (int64, error)
+	CreateUser(ctx context.Context, username, email, password string) (int64, error)
 }
 
 type UserUpdater interface {
-	UpdateUser(user *domain.User) error
+	UpdateUser(ctx context.Context, user *domain.User) error
 }
 type UserDeleter interface {
-	DeleteUser(id int64) error
+	DeleteUser(ctx context.Context, id int64) error
 }
 
 type Hasher interface {
