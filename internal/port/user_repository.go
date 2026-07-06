@@ -4,8 +4,11 @@ import (
 	"github.com/disdreamq/BlogApi/internal/domain"
 )
 
-type UserReader interface {
-	ReadUser(userID int64) (*domain.User, error)
+type UserReaderByID interface {
+	GetUserByID(userID int64) (*domain.User, error)
+}
+type UserReaderByEmail interface {
+	GetUserByEmail(email string) (*domain.User, error)
 }
 
 type UserCreater interface {
@@ -25,7 +28,8 @@ type Hasher interface {
 }
 
 type UserRepository interface {
-	UserReader
+	UserReaderByID
+	UserReaderByEmail
 	UserCreater
 	UserUpdater
 	UserDeleter
