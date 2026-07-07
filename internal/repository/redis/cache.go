@@ -19,8 +19,8 @@ func (r *RedisCache) Get(ctx context.Context, key string) (string, error) {
 	return r.rdb.Get(ctx, key).Result()
 }
 
-func (r *RedisCache) Set(ctx context.Context, key string, value []byte, ttl time.Duration) error {
-	return r.rdb.Set(ctx, key, value, ttl).Err()
+func (r *RedisCache) Set(ctx context.Context, key string, value any, ttl time.Duration) error {
+	return r.rdb.Set(ctx, key, value.([]byte), ttl).Err()
 }
 
 func (r *RedisCache) Del(ctx context.Context, key string) error {
