@@ -3,12 +3,15 @@ package service
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
+	"time"
 
 	"github.com/disdreamq/BlogApi/internal/domain"
 	"github.com/disdreamq/BlogApi/internal/port"
+	"github.com/redis/go-redis/v9"
 )
 
-// TODO логирование и кеш
+// TODO Добавить логгирование
 type PostService struct {
 	postRepo port.PostRepository
 	cache    port.Cache
@@ -27,18 +30,37 @@ func (p *PostService) CreatePost(ctx context.Context, userID int64, title, conte
 }
 
 func (p *PostService) GetPost(ctx context.Context, postID int64) (*domain.Post, error) {
-	user, err := p.postRepo.ReadPost(ctx, postID)
+	cachedPost, err := p.cache.Get(ctx, string(rune(postID)))
 	if err != nil {
 		switch err {
-		case sql.ErrNoRows:
-			return nil, ErrPostNotFound
+		case redis.Nil:
+			post, err := p.postRepo.ReadPost(ctx, postID)
+			if err != nil {
+				switch err {
+				case sql.ErrNoRows:
+					return nil, ErrPostNotFound
+				default:
+					return nil, ErrUnexpected
+				}
+			}
+			data, err := json.Marshal(post)
+			if err != nil {
+				return nil, err
+			}
+
+			p.cache.Set(ctx, string(rune(postID)), data, 10*time.Minute)
+			return post, nil
 		default:
 			return nil, ErrUnexpected
 		}
 	}
-	return user, nil
+	var post domain.Post
+	err = json.Unmarshal(cachedPost, &post)
+	if err != nil {
+		return nil, ErrCacheUnmarshal
+	}
+	return &post, nil
 }
-
 func (p *PostService) UpdatePost(ctx context.Context, post *domain.Post) error {
 	err := p.postRepo.UpdatePost(ctx, post)
 	if err != nil {
@@ -49,6 +71,7 @@ func (p *PostService) UpdatePost(ctx context.Context, post *domain.Post) error {
 			return ErrUnexpected
 		}
 	}
+	p.cache.Del(ctx, string(rune(post.ID)))
 	return nil
 
 }
@@ -63,5 +86,6 @@ func (p *PostService) DeletePost(ctx context.Context, postID int64) error {
 			return ErrUnexpected
 		}
 	}
+	p.cache.Del(ctx, string(rune(postID)))
 	return nil
 }
