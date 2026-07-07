@@ -2,13 +2,17 @@ package redis
 
 import (
 	"context"
+	"errors"
+	"sync/atomic"
 	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
 type RedisCache struct {
-	rdb *redis.Client
+	rdb       *redis.Client
+	cacheMiss atomic.Uint64
+	cacheHit  atomic.Uint64
 }
 
 func NewRedisCache(rdb *redis.Client) *RedisCache {
@@ -25,4 +29,14 @@ func (r *RedisCache) Set(ctx context.Context, key string, value any, ttl time.Du
 
 func (r *RedisCache) Del(ctx context.Context, key string) error {
 	return r.rdb.Del(ctx, key).Err()
+}
+
+func (r *RedisCache) ShowRatio() (float64, error) {
+	miss := r.cacheMiss.Load()
+	hit := r.cacheHit.Load()
+	if miss == 0 {
+		return float64(hit), errors.New("Cache miss is 0")
+	}
+	return float64(hit) / float64(miss), nil
+
 }
