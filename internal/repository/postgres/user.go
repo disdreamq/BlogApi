@@ -8,7 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type userRow struct {
+type dbUser struct {
 	ID           int64     `db:"id"`
 	Email        string    `db:"email"`
 	Username     string    `db:"username"`
@@ -16,7 +16,7 @@ type userRow struct {
 	CreatedAt    time.Time `db:"created_at"`
 }
 
-func (r userRow) toDomain() *domain.User {
+func (r *dbUser) toDomain() *domain.User {
 	return &domain.User{
 		ID:           r.ID,
 		Username:     r.Username,
@@ -34,11 +34,11 @@ func NewUserRepository(db *sqlx.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) (int64, error) {
+func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) (*domain.User, error) {
 
 	tx, err := r.db.Beginx()
 	if err != nil {
-		return -1, err
+		return nil, err
 	}
 	defer tx.Rollback()
 
@@ -49,18 +49,18 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) (int
         INSERT INTO users (username, email, password_hash)
         VALUES ($1, $2, $3)
 		ON CONFLICT (email) DO NOTHING
-        RETURNING id
+        RETURNING *
     `
-	var id int64
-	err = tx.GetContext(txCtx, &id, query, user.Username, user.Email, user.PasswordHash)
+	var userRow dbUser
+	err = tx.GetContext(txCtx, &userRow, query, user.Username, user.Email, user.PasswordHash)
 	if err != nil {
-		return -1, err
+		return nil, err
 	}
 	if err = tx.Commit(); err != nil {
-		return -1, err
+		return nil, err
 	}
 
-	return id, nil
+	return userRow.toDomain(), nil
 }
 
 func (r *UserRepository) GetUserByID(ctx context.Context, userID int64) (*domain.User, error) {
@@ -71,7 +71,7 @@ func (r *UserRepository) GetUserByID(ctx context.Context, userID int64) (*domain
         SELECT * FROM users
         WHERE id = $1
     `
-	var user userRow
+	var user dbUser
 	err := r.db.GetContext(txCtx, &user, query, userID)
 	if err != nil {
 		return nil, err
@@ -87,7 +87,7 @@ func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*dom
         SELECT * FROM users
         WHERE email = $1
     `
-	var user userRow
+	var user dbUser
 	err := r.db.GetContext(txCtx, &user, query, email)
 	if err != nil {
 		return nil, err
@@ -109,10 +109,13 @@ func (r *UserRepository) UpdateUser(ctx context.Context, user *domain.User) erro
 		UPDATE users SET username = $1, email = $2
 		WHERE id = $3
 	`
-	var userRow userRow
-	err = tx.GetContext(txCtx, &userRow, query, user.Username, user.Email, user.ID)
+	result, err := tx.ExecContext(txCtx, query, user.Username, user.Email, user.ID)
 	if err != nil {
 		return err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return ErrNoRows
 	}
 
 	if err = tx.Commit(); err != nil {
