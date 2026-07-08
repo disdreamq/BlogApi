@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/disdreamq/BlogApi/config"
 	"github.com/redis/go-redis/v9"
@@ -9,7 +10,7 @@ import (
 
 func RedisConnect(cfg config.Config) (*redis.Client, error) {
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     cfg.RedisHost + ":" + string(rune(cfg.RedisPort)),
+		Addr:     cfg.RedisHost + ":" + strconv.Itoa(cfg.RedisPort),
 		Password: cfg.RedisPassword,
 		DB:       cfg.RedisDatabase,
 	})
