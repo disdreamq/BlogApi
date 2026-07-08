@@ -3,15 +3,15 @@ package domain
 import "time"
 
 type User struct {
-	ID           int64     `json:"id"`
-	Username     string    `json:"username"`
-	Email        string    `json:"email"`
-	PasswordHash string    `json:"-"`
-	CreatedAt    time.Time `json:"created_at"`
+	ID           int64
+	Username     string
+	Email        string
+	PasswordHash string
+	CreatedAt    time.Time
 }
 
-func NewUser(userName, email, passwordHash string) (*User, error) {
-	if userName == "" || len(userName) > 30 {
+func NewUser(username, email, passwordHash string) (*User, error) {
+	if username == "" || len(username) > 30 {
 		return nil, ErrInvalidUserName
 	}
 	if email == "" {
@@ -19,9 +19,8 @@ func NewUser(userName, email, passwordHash string) (*User, error) {
 	}
 
 	return &User{
-		Username:     userName,
+		Username:     username,
 		Email:        email,
 		PasswordHash: passwordHash,
-		CreatedAt:    time.Now(),
 	}, nil
 }
