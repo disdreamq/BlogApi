@@ -8,7 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type postRow struct {
+type dbPost struct {
 	ID        int64     `db:"id"`
 	UserID    int64     `db:"user_id"`
 	Title     string    `db:"title"`
@@ -17,7 +17,7 @@ type postRow struct {
 	UpdatedAt time.Time `db:"updated_at"`
 }
 
-func (r postRow) toDomain() *domain.Post {
+func (r dbPost) toDomain() *domain.Post {
 	return &domain.Post{
 		ID:        r.ID,
 		UserID:    r.UserID,
@@ -36,11 +36,11 @@ func NewPostRepository(db *sqlx.DB) *PostRepository {
 	return &PostRepository{db: db}
 }
 
-func (r *PostRepository) CreatePost(ctx context.Context, post *domain.Post) (int64, error) {
+func (r *PostRepository) CreatePost(ctx context.Context, post *domain.Post) (*domain.Post, error) {
 
 	tx, err := r.db.Beginx()
 	if err != nil {
-		return -1, err
+		return nil, err
 	}
 	defer tx.Rollback()
 
@@ -50,18 +50,18 @@ func (r *PostRepository) CreatePost(ctx context.Context, post *domain.Post) (int
 	query := `
         INSERT INTO posts (user_id, title, content)
         VALUES ($1, $2, $3)
-        RETURNING id
+        RETURNING *
     `
-	var id int64
-	err = tx.GetContext(txCtx, &id, query, post.UserID, post.Title, post.Content)
+	var dbPost dbPost
+	err = tx.GetContext(txCtx, &dbPost, query, post.UserID, post.Title, post.Content)
 	if err != nil {
-		return -1, err
+		return nil, err
 	}
 	if err = tx.Commit(); err != nil {
-		return -1, err
+		return nil, err
 	}
 
-	return id, nil
+	return dbPost.toDomain(), nil
 }
 
 func (r *PostRepository) ReadPost(ctx context.Context, userID int64) (*domain.Post, error) {
@@ -72,7 +72,7 @@ func (r *PostRepository) ReadPost(ctx context.Context, userID int64) (*domain.Po
         SELECT * FROM posts
         WHERE id = $1
     `
-	var post postRow
+	var post dbPost
 	err := r.db.GetContext(txCtx, &post, query, userID)
 	if err != nil {
 		return nil, err
@@ -110,7 +110,7 @@ func (r *PostRepository) UpdatePost(ctx context.Context, post *domain.Post) erro
 		UPDATE posts SET title = $1, content = $2
 		WHERE id = $3
 	`
-	var postRow postRow
+	var postRow dbPost
 	err = tx.GetContext(txCtx, &postRow, query, post.Title, post.Content, post.ID)
 	if err != nil {
 		return err
