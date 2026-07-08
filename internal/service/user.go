@@ -15,15 +15,9 @@ type UserService struct {
 }
 
 func (u *UserService) CreateUser(ctx context.Context, username, email, password string) (*domain.User, error) {
-	if password == "" {
-		return nil, ErrEmptyPassword
-	}
-	if len(password) < 8 || len(password) > 60 {
-		return nil, ErrInvalidPasswordLength
-	}
-	passwordHash, err := u.hasher.Hash(password)
+	passwordHash, err := processPassword(password, u.hasher)
 	if err != nil {
-		return nil, ErrCanNotCalculatePassHash
+		return nil, err
 	}
 	domainUser, err := domain.NewUser(username, email, passwordHash)
 	if err != nil {
@@ -68,8 +62,16 @@ func (u *UserService) GetUserByEmail(ctx context.Context, email string) (*domain
 	return user, nil
 }
 
-func (u *UserService) UpdateUser(ctx context.Context, user *domain.User) error {
-	err := u.userRepo.UpdateUser(ctx, user)
+func (u *UserService) UpdateUser(ctx context.Context, username, email, password string) error {
+	passwordHash, err := processPassword(password, u.hasher)
+	if err != nil {
+		return err
+	}
+	domainUser, err := domain.NewUser(username, email, passwordHash)
+	if err != nil {
+		return err
+	}
+	err = u.userRepo.UpdateUser(ctx, domainUser)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -96,4 +98,18 @@ func (u *UserService) DeleteUser(ctx context.Context, userID int64) error {
 		}
 	}
 	return nil
+}
+
+func processPassword(pass string, hasher port.Hasher) (string, error) {
+	if pass == "" {
+		return "", ErrEmptyPassword
+	}
+	if len(pass) < 8 || len(pass) > 60 {
+		return "", ErrInvalidPasswordLength
+	}
+	pass, err := hasher.Hash(pass)
+	if err != nil {
+		return "", ErrCanNotCalculatePassHash
+	}
+	return pass, nil
 }
