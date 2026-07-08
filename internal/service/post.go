@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"strconv"
 	"time"
 
 	"github.com/disdreamq/BlogApi/internal/domain"
@@ -17,20 +18,20 @@ type PostService struct {
 	cache    port.Cache
 }
 
-func (p *PostService) CreatePost(ctx context.Context, userID int64, title, content string) (int64, error) {
+func (p *PostService) CreatePost(ctx context.Context, userID int64, title, content string) (*domain.Post, error) {
 	domainPost, err := domain.NewPost(userID, title, content)
 	if err != nil {
-		return -1, err
+		return nil, err
 	}
-	id, err := p.postRepo.CreatePost(ctx, domainPost.UserID, domainPost.Title, domainPost.Content)
+	post, err := p.postRepo.CreatePost(ctx, domainPost)
 	if err != nil {
-		return -1, ErrLinkedUserNotFound
+		return nil, ErrLinkedUserNotFound
 	}
-	return id, nil
+	return post, nil
 }
 
 func (p *PostService) GetPost(ctx context.Context, postID int64) (*domain.Post, error) {
-	cachedPost, err := p.cache.Get(ctx, string(rune(postID)))
+	cachedPost, err := p.cache.Get(ctx, strconv.FormatInt(postID, 10))
 	if err != nil {
 		switch err {
 		case redis.Nil:

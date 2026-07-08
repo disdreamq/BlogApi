@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"database/sql"
-	"errors"
 
 	"github.com/disdreamq/BlogApi/internal/domain"
 	"github.com/disdreamq/BlogApi/internal/port"
@@ -15,28 +14,32 @@ type UserService struct {
 	hasher   port.Hasher
 }
 
-func (u *UserService) CreateUser(ctx context.Context, username, email, password string) (int64, error) {
+func (u *UserService) CreateUser(ctx context.Context, username, email, password string) (*domain.User, error) {
 	if password == "" {
-		return -1, ErrEmptyPassword
+		return nil, ErrEmptyPassword
 	}
 	if len(password) < 8 || len(password) > 60 {
-		return -1, ErrInvalidPasswordLength
+		return nil, ErrInvalidPasswordLength
 	}
 	passwordHash, err := u.hasher.Hash(password)
 	if err != nil {
-		return -1, ErrCanNotCalculatePassHash
+		return nil, ErrCanNotCalculatePassHash
 	}
 	domainUser, err := domain.NewUser(username, email, passwordHash)
 	if err != nil {
-		return -1, err
+		return nil, err
 	}
-	id, err := u.userRepo.CreateUser(ctx, domainUser.Username, domainUser.Email, domainUser.PasswordHash)
+	user, err := u.userRepo.CreateUser(ctx, domainUser)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return -1, ErrUserAlreadyExists
+		switch err {
+		case sql.ErrNoRows:
+			return nil, ErrUserAlreadyExists
+		default:
+			return nil, ErrUnexpected
 		}
+
 	}
-	return id, nil
+	return user, nil
 }
 
 func (u *UserService) GetUserByID(ctx context.Context, userID int64) (*domain.User, error) {
