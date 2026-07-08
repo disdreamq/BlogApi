@@ -6,15 +6,15 @@ import (
 	"github.com/disdreamq/BlogApi/internal/domain"
 )
 
+type UserCreater interface {
+	CreateUser(ctx context.Context, user *domain.User) (*domain.User, error)
+}
+
 type UserReaderByID interface {
 	GetUserByID(ctx context.Context, userID int64) (*domain.User, error)
 }
 type UserReaderByEmail interface {
 	GetUserByEmail(ctx context.Context, email string) (*domain.User, error)
-}
-
-type UserCreater interface {
-	CreateUser(ctx context.Context, username, email, password string) (int64, error)
 }
 
 type UserUpdater interface {

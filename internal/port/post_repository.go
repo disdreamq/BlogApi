@@ -7,7 +7,7 @@ import (
 )
 
 type PostCreater interface {
-	CreatePost(ctx context.Context, userID int64, title, content string) (int64, error)
+	CreatePost(ctx context.Context, post *domain.Post) (*domain.Post, error)
 }
 type PostReader interface {
 	ReadPost(ctx context.Context, ID int64) (*domain.Post, error)
