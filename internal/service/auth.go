@@ -53,7 +53,7 @@ func NewAuthService(
 }
 
 func (s *AuthService) Login(ctx context.Context, email, password string) (*AuthResult, error) {
-	user, err := s.userService.GetUserByEmail(ctx, email)
+	user, err := s.userService.GetByEmail(ctx, email)
 	if err != nil {
 		return nil, err
 	}
