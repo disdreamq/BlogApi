@@ -12,9 +12,9 @@ type AuthMiddleware struct {
 	tokenProvider port.TokenProvider
 }
 
-func NewAuthMiddleware(tokenProvider *port.TokenProvider) *AuthMiddleware {
+func NewAuthMiddleware(tokenProvider port.TokenProvider) *AuthMiddleware {
 	return &AuthMiddleware{
-		tokenProvider: *tokenProvider,
+		tokenProvider: tokenProvider,
 	}
 }
 
@@ -34,7 +34,7 @@ func (m *AuthMiddleware) Authenticate(next http.Handler) http.Handler {
 		if err != nil {
 			http.Error(w, "invalid token", http.StatusUnauthorized)
 		}
-		ctx := context.WithValue(r.Context(), "user_id", payload.Claims.UserID)
+		ctx := context.WithValue(r.Context(), "userID", payload.Claims.UserID)
 		ctx = context.WithValue(ctx, "email", payload.Claims.Email)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
