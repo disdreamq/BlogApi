@@ -14,8 +14,9 @@ var (
 	ErrCanNotLogin   = errors.New("Can not login.")
 
 	// User
-	ErrUserNotFound = errors.New("User not found.")
-	ErrUserTimeOut  = errors.New("Time out error while processing user.")
+	ErrUserNotFound     = errors.New("User not found.")
+	ErrUserTimeOut      = errors.New("Time out error while processing user.")
+	ErrMethodNotAllowed = errors.New("Method not allowed.")
 
 	// Post
 	ErrPostNotFound       = errors.New("Post not found.")

@@ -62,7 +62,10 @@ func (u *UserService) GetByEmail(ctx context.Context, email string) (*domain.Use
 	return user, nil
 }
 
-func (u *UserService) Update(ctx context.Context, username, email, password string) error {
+func (u *UserService) Update(ctx context.Context, currUserID, userID int64, username, email, password string) error {
+	if ok := u.validateCurrUser(ctx, currUserID, userID); !ok {
+		return ErrMethodNotAllowed
+	}
 	passwordHash, err := processPassword(password, u.hasher)
 	if err != nil {
 		return err
@@ -85,7 +88,10 @@ func (u *UserService) Update(ctx context.Context, username, email, password stri
 	return nil
 }
 
-func (u *UserService) Delete(ctx context.Context, userID int64) error {
+func (u *UserService) Delete(ctx context.Context, currUserID int64, userID int64) error {
+	if ok := u.validateCurrUser(ctx, currUserID, userID); !ok {
+		return ErrMethodNotAllowed
+	}
 	err := u.userRepo.Delete(ctx, userID)
 	if err != nil {
 		switch err {
@@ -98,6 +104,16 @@ func (u *UserService) Delete(ctx context.Context, userID int64) error {
 		}
 	}
 	return nil
+}
+func (p *UserService) validateCurrUser(ctx context.Context, currUserID, userID int64) bool {
+	user, err := p.GetByID(ctx, userID)
+	if err != nil {
+		return false
+	}
+	if user.ID != currUserID {
+		return false
+	}
+	return true
 }
 
 func processPassword(pass string, hasher port.Hasher) (string, error) {

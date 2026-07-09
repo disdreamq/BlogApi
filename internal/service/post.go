@@ -12,7 +12,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// TODO Добавить логгирование
 type PostService struct {
 	postRepo port.PostRepository
 	cache    port.Cache
@@ -102,8 +101,16 @@ func (p *PostService) GetByTitle(ctx context.Context, title string) (*domain.Pos
 	return &post, nil
 }
 
-func (p *PostService) Update(ctx context.Context, post *domain.Post) error {
-	err := p.postRepo.Update(ctx, post)
+func (p *PostService) Update(ctx context.Context, currUserID, postID int64, title, content string) error {
+
+	if ok := p.validateCurrUser(ctx, currUserID, postID); !ok {
+		return ErrMethodNotAllowed
+	}
+	post, err := domain.NewPost(currUserID, title, content)
+	if err != nil {
+		return err
+	}
+	err = p.postRepo.Update(ctx, post)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -117,7 +124,10 @@ func (p *PostService) Update(ctx context.Context, post *domain.Post) error {
 
 }
 
-func (p *PostService) Delete(ctx context.Context, postID int64) error {
+func (p *PostService) Delete(ctx context.Context, currUserID int64, postID int64) error {
+	if ok := p.validateCurrUser(ctx, currUserID, postID); !ok {
+		return ErrMethodNotAllowed
+	}
 	err := p.postRepo.Delete(ctx, postID)
 	if err != nil {
 		switch err {
@@ -129,4 +139,14 @@ func (p *PostService) Delete(ctx context.Context, postID int64) error {
 	}
 	p.cache.Del(ctx, string(rune(postID)))
 	return nil
+}
+func (p *PostService) validateCurrUser(ctx context.Context, currUserID int64, postID int64) bool {
+	post, err := p.GetByID(ctx, postID)
+	if err != nil {
+		return false
+	}
+	if post.UserID != currUserID {
+		return false
+	}
+	return true
 }
