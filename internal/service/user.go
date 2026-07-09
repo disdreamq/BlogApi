@@ -14,7 +14,7 @@ type UserService struct {
 	hasher   port.Hasher
 }
 
-func (u *UserService) CreateUser(ctx context.Context, username, email, password string) (*domain.User, error) {
+func (u *UserService) Create(ctx context.Context, username, email, password string) (*domain.User, error) {
 	passwordHash, err := processPassword(password, u.hasher)
 	if err != nil {
 		return nil, err
@@ -23,7 +23,7 @@ func (u *UserService) CreateUser(ctx context.Context, username, email, password 
 	if err != nil {
 		return nil, err
 	}
-	user, err := u.userRepo.CreateUser(ctx, domainUser)
+	user, err := u.userRepo.Create(ctx, domainUser)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -36,8 +36,8 @@ func (u *UserService) CreateUser(ctx context.Context, username, email, password 
 	return user, nil
 }
 
-func (u *UserService) GetUserByID(ctx context.Context, userID int64) (*domain.User, error) {
-	user, err := u.userRepo.GetUserByID(ctx, userID)
+func (u *UserService) GetByID(ctx context.Context, userID int64) (*domain.User, error) {
+	user, err := u.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -49,8 +49,8 @@ func (u *UserService) GetUserByID(ctx context.Context, userID int64) (*domain.Us
 	return user, nil
 }
 
-func (u *UserService) GetUserByEmail(ctx context.Context, email string) (*domain.User, error) {
-	user, err := u.userRepo.GetUserByEmail(ctx, email)
+func (u *UserService) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
+	user, err := u.userRepo.GetByEmail(ctx, email)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -62,7 +62,7 @@ func (u *UserService) GetUserByEmail(ctx context.Context, email string) (*domain
 	return user, nil
 }
 
-func (u *UserService) UpdateUser(ctx context.Context, username, email, password string) error {
+func (u *UserService) Update(ctx context.Context, username, email, password string) error {
 	passwordHash, err := processPassword(password, u.hasher)
 	if err != nil {
 		return err
@@ -71,7 +71,7 @@ func (u *UserService) UpdateUser(ctx context.Context, username, email, password 
 	if err != nil {
 		return err
 	}
-	err = u.userRepo.UpdateUser(ctx, domainUser)
+	err = u.userRepo.Update(ctx, domainUser)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -85,8 +85,8 @@ func (u *UserService) UpdateUser(ctx context.Context, username, email, password 
 	return nil
 }
 
-func (u *UserService) DeleteUser(ctx context.Context, userID int64) error {
-	err := u.userRepo.DeleteUser(ctx, userID)
+func (u *UserService) Delete(ctx context.Context, userID int64) error {
+	err := u.userRepo.Delete(ctx, userID)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
