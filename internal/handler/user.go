@@ -32,7 +32,7 @@ func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error": "invalid JSON"}`, http.StatusBadRequest)
 		return
 	}
-	user, err := c.userService.CreateUser(r.Context(), userReq.Username, userReq.Email, userReq.Password)
+	user, err := c.userService.Create(r.Context(), userReq.Username, userReq.Email, userReq.Password)
 	if err != nil {
 		switch err {
 		case service.ErrUnexpected:
@@ -58,7 +58,7 @@ func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error": "invalid userID"}`, http.StatusBadRequest)
 		return
 	}
-	user, err := c.userService.GetUserByID(r.Context(), userID)
+	user, err := c.userService.GetByID(r.Context(), userID)
 	if err != nil {
 		switch err {
 		case service.ErrUserNotFound:
@@ -75,7 +75,7 @@ func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 func (c *UserController) GetByEmail(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	email := chi.URLParam(r, "user_email")
-	user, err := c.userService.GetUserByEmail(r.Context(), email)
+	user, err := c.userService.GetByEmail(r.Context(), email)
 	if err != nil {
 		switch err {
 		case service.ErrUserNotFound:
@@ -96,7 +96,7 @@ func (c *UserController) Update(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error": "invalid JSON"}`, http.StatusBadRequest)
 		return
 	}
-	err := c.userService.UpdateUser(r.Context(), userReq.Username, userReq.Email, userReq.Password)
+	err := c.userService.Update(r.Context(), userReq.Username, userReq.Email, userReq.Password)
 	if err != nil {
 		switch err {
 		case service.ErrUserNotFound:
@@ -118,7 +118,7 @@ func (c *UserController) Delete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error": "invalid userID"}`, http.StatusBadRequest)
 		return
 	}
-	err = c.userService.DeleteUser(r.Context(), userID)
+	err = c.userService.Delete(r.Context(), userID)
 	if err != nil {
 		switch err {
 		case service.ErrUserNotFound:
