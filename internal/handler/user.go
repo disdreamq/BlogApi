@@ -53,7 +53,7 @@ func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
 
 func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	userID, err := strconv.ParseInt(chi.URLParam(r, "user_id"), 10, 64)
+	userID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
 	if err != nil {
 		http.Error(w, `{"error": "invalid user ID"}`, http.StatusBadRequest)
 		return
@@ -74,7 +74,7 @@ func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 
 func (c *UserController) GetByEmail(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	email := chi.URLParam(r, "user_email")
+	email := chi.URLParam(r, "email")
 	user, err := c.userService.GetByEmail(r.Context(), email)
 	if err != nil {
 		switch err {
@@ -96,7 +96,17 @@ func (c *UserController) Update(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error": "invalid JSON"}`, http.StatusBadRequest)
 		return
 	}
-	err := c.userService.Update(r.Context(), userReq.Username, userReq.Email, userReq.Password)
+	userID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
+	if err != nil {
+		http.Error(w, `{"error": "invalid user ID"}`, http.StatusBadRequest)
+		return
+	}
+	currUserID, err := strconv.ParseInt(r.Context().Value("userID").(string), 10, 64)
+	if err != nil {
+		http.Error(w, `{"error": "invalid user ID"}`, http.StatusBadRequest)
+		return
+	}
+	err = c.userService.Update(r.Context(), currUserID, userID, userReq.Username, userReq.Email, userReq.Password)
 	if err != nil {
 		switch err {
 		case service.ErrUserNotFound:
@@ -113,12 +123,17 @@ func (c *UserController) Update(w http.ResponseWriter, r *http.Request) {
 
 func (c *UserController) Delete(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	userID, err := strconv.ParseInt(chi.URLParam(r, "user_id"), 10, 64)
+	userID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
 	if err != nil {
 		http.Error(w, `{"error": "invalid user ID"}`, http.StatusBadRequest)
 		return
 	}
-	err = c.userService.Delete(r.Context(), userID)
+	currUserID, err := strconv.ParseInt(r.Context().Value("userID").(string), 10, 64)
+	if err != nil {
+		http.Error(w, `{"error": "invalid user ID"}`, http.StatusBadRequest)
+		return
+	}
+	err = c.userService.Delete(r.Context(), currUserID, userID)
 	if err != nil {
 		switch err {
 		case service.ErrUserNotFound:

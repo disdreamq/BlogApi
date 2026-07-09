@@ -33,7 +33,7 @@ func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error": "invalid JSON"}`, http.StatusBadRequest)
 		return
 	}
-	postReq.UserID = r.Context().Value("user_id").(int64)
+	postReq.UserID = r.Context().Value("userID").(int64)
 	post, err := c.postService.Create(r.Context(), postReq.UserID, postReq.Title, postReq.Content)
 	if err != nil {
 		switch err {
@@ -59,7 +59,7 @@ func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
 
 func (c *PostController) GetByID(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	postID, err := strconv.ParseInt(chi.URLParam(r, "post_id"), 10, 64)
+	postID, err := strconv.ParseInt(chi.URLParam(r, "postID"), 10, 64)
 	if err != nil {
 		http.Error(w, `{"error": "invalid post ID"}`, http.StatusBadRequest)
 		return
@@ -70,7 +70,28 @@ func (c *PostController) GetByID(w http.ResponseWriter, r *http.Request) {
 		case service.ErrUserNotFound:
 			http.Error(w, `{"error": "post not found"}`, http.StatusNotFound)
 		default:
-			http.Error(w, `{"error": "failed to get user"}`, http.StatusBadRequest)
+			http.Error(w, `{"error": "failed to get post"}`, http.StatusBadRequest)
+		}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(post)
+}
+
+func (c *PostController) GetByTitle(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	title := chi.URLParam(r, "title")
+	if title == "" {
+		http.Error(w, `{"error": "invalid post title"}`, http.StatusBadRequest)
+		return
+	}
+	post, err := c.postService.GetByTitle(r.Context(), title)
+	if err != nil {
+		switch err {
+		case service.ErrUserNotFound:
+			http.Error(w, `{"error": "post not found"}`, http.StatusNotFound)
+		default:
+			http.Error(w, `{"error": "failed to get post"}`, http.StatusBadRequest)
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -85,15 +106,20 @@ func (c *PostController) Update(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error": "invalid JSON"}`, http.StatusBadRequest)
 		return
 	}
-	postReq.UserID = r.Context().Value("user_id").(int64)
-	err := c.postService.Update(r.Context(), postReq.UserID, postReq.Title, postReq.Content)
+	postReq.UserID = r.Context().Value("userID").(int64)
+	currUserID, err := strconv.ParseInt(r.Context().Value("userID").(string), 10, 64)
+	if err != nil {
+		http.Error(w, `{"error": "invalid user ID"}`, http.StatusBadRequest)
+		return
+	}
+	err = c.postService.Update(r.Context(), currUserID, postReq.UserID, postReq.Title, postReq.Content)
 	if err != nil {
 		switch err {
 		case service.ErrUserNotFound:
 			http.Error(w, `{"error": "user not found"}`, http.StatusNotFound)
 			return
 		default:
-			http.Error(w, `{"error": "failed to get user"}`, http.StatusBadRequest)
+			http.Error(w, `{"error": "failed to get post"}`, http.StatusBadRequest)
 			return
 		}
 	}
@@ -103,12 +129,17 @@ func (c *PostController) Update(w http.ResponseWriter, r *http.Request) {
 
 func (c *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	postID, err := strconv.ParseInt(chi.URLParam(r, "post_id"), 10, 64)
+	postID, err := strconv.ParseInt(chi.URLParam(r, "postID"), 10, 64)
 	if err != nil {
 		http.Error(w, `{"error": "invalid post ID"}`, http.StatusBadRequest)
 		return
 	}
-	err = c.postService.Delete(r.Context(), postID)
+	currUserID, err := strconv.ParseInt(r.Context().Value("userID").(string), 10, 64)
+	if err != nil {
+		http.Error(w, `{"error": "invalid user ID"}`, http.StatusBadRequest)
+		return
+	}
+	err = c.postService.Delete(r.Context(), currUserID, postID)
 	if err != nil {
 		switch err {
 		case service.ErrPostNotFound:
