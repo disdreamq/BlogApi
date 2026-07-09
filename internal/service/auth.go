@@ -4,31 +4,14 @@ import (
 	"context"
 	"time"
 
+	"github.com/disdreamq/BlogApi/internal/domain"
 	"github.com/disdreamq/BlogApi/internal/port"
 )
 
 type TokenProvider interface {
 	GenerateToken(ctx context.Context, userID int64, email string) (string, error)
-	ValidateToken(tokenString string) (*TokenPayload, error)
+	ValidateToken(tokenString string) (*domain.TokenPayload, error)
 	RefreshToken(oldToken string) (string, error)
-}
-
-type TokenPayload struct {
-	UserID   int64     `json:"user_id"`
-	Email    string    `json:"email"`
-	ExpireAt time.Time `json:"expire_at"`
-}
-
-type AuthResult struct {
-	Token        string `json:"token"`
-	TokenPayload *TokenPayload
-}
-
-func NewAuthResult(token string, tp *TokenPayload) *AuthResult {
-	return &AuthResult{
-		Token:        token,
-		TokenPayload: tp,
-	}
 }
 
 type AuthService struct {
@@ -52,7 +35,7 @@ func NewAuthService(
 	}
 }
 
-func (s *AuthService) Login(ctx context.Context, email, password string) (*AuthResult, error) {
+func (s *AuthService) Login(ctx context.Context, email, password string) (*domain.AuthResult, error) {
 	user, err := s.userService.GetByEmail(ctx, email)
 	if err != nil {
 		return nil, err
@@ -65,5 +48,5 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*AuthR
 		return nil, ErrCanNotLogin
 	}
 	payload, _ := s.tokenProvider.ValidateToken(token)
-	return NewAuthResult(token, payload), nil
+	return domain.NewAuthResult(token, payload), nil
 }
