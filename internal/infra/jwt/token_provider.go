@@ -4,14 +4,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/disdreamq/BlogApi/internal/domain"
 	"github.com/golang-jwt/jwt/v5"
 )
-
-type Claims struct {
-	UserId int64  `json:"user_id"`
-	Email  string `json:"email"`
-	jwt.RegisteredClaims
-}
 
 type Provider struct {
 	secret  []byte
@@ -28,8 +23,8 @@ func NewProvider(secret string, expiry time.Duration) *Provider {
 }
 
 func (p *Provider) GenerateToken(_ context.Context, userID int64, email string) (string, error) {
-	claims := Claims{
-		UserId: userID,
+	claims := domain.Claims{
+		UserID: userID,
 		Email:  email,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(p.expiry)),
@@ -40,8 +35,8 @@ func (p *Provider) GenerateToken(_ context.Context, userID int64, email string) 
 	return token.SignedString(p.secret)
 }
 
-func (p *Provider) ValidateToken(tokenString string) (*Claims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(t *jwt.Token) (any, error) {
+func (p *Provider) ValidateToken(tokenString string) (*domain.TokenPayload, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &domain.Claims{}, func(t *jwt.Token) (any, error) {
 		if t.Method != p.signing {
 			return nil, ErrInvalidToken
 		}
@@ -50,9 +45,11 @@ func (p *Provider) ValidateToken(tokenString string) (*Claims, error) {
 	if err != nil {
 		return nil, ErrInvalidToken
 	}
-	claims, ok := token.Claims.(*Claims)
+	claims, ok := token.Claims.(*domain.Claims)
 	if ok || !token.Valid {
 		return nil, ErrInvalidToken
 	}
-	return claims, nil
+	return domain.NewPayload(claims, time.Now().Add(p.expiry)), nil
 }
+
+func (p *Provider) RefreshToken(oldToken string) (string, error)

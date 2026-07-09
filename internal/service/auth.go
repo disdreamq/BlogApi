@@ -8,23 +8,17 @@ import (
 	"github.com/disdreamq/BlogApi/internal/port"
 )
 
-type TokenProvider interface {
-	GenerateToken(ctx context.Context, userID int64, email string) (string, error)
-	ValidateToken(tokenString string) (*domain.TokenPayload, error)
-	RefreshToken(oldToken string) (string, error)
-}
-
 type AuthService struct {
 	userService   port.UserRepository
 	hasher        port.Hasher
-	tokenProvider TokenProvider
+	tokenProvider port.TokenProvider
 	tokenTTL      time.Duration
 }
 
 func NewAuthService(
 	userService port.UserRepository,
 	hasher port.Hasher,
-	tokenProvider TokenProvider,
+	tokenProvider port.TokenProvider,
 	tokenTTL time.Duration,
 ) *AuthService {
 	return &AuthService{

@@ -5,14 +5,14 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/disdreamq/BlogApi/internal/service"
+	"github.com/disdreamq/BlogApi/internal/port"
 )
 
 type AuthMiddleware struct {
-	tokenProvider service.TokenProvider
+	tokenProvider port.TokenProvider
 }
 
-func NewAuthMiddleware(tokenProvider *service.TokenProvider) *AuthMiddleware {
+func NewAuthMiddleware(tokenProvider *port.TokenProvider) *AuthMiddleware {
 	return &AuthMiddleware{
 		tokenProvider: *tokenProvider,
 	}
@@ -34,8 +34,8 @@ func (m *AuthMiddleware) Authenticate(next http.Handler) http.Handler {
 		if err != nil {
 			http.Error(w, "invalid token", http.StatusUnauthorized)
 		}
-		ctx := context.WithValue(r.Context(), "user_id", payload.UserID)
-		ctx = context.WithValue(ctx, "email", payload.Email)
+		ctx := context.WithValue(r.Context(), "user_id", payload.Claims.UserID)
+		ctx = context.WithValue(ctx, "email", payload.Claims.Email)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
