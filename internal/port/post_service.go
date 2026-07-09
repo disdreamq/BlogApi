@@ -7,8 +7,9 @@ import (
 )
 
 type PostService interface {
-	CreatePost(ctx context.Context, userID int64, title, content string) (int64, error)
-	GetPost(ctx context.Context, postID int64) (*domain.Post, error)
-	UpdatePost(ctx context.Context, post *domain.Post) error
-	DeletePost(ctx context.Context, postID int64) error
+	Create(ctx context.Context, userID int64, title, content string) (*domain.Post, error)
+	GetByID(ctx context.Context, postID int64) (*domain.Post, error)
+	GetByTitle(ctx context.Context, title string) (*domain.Post, error)
+	Update(ctx context.Context, postID int64, title, content string) error
+	Delete(ctx context.Context, postID int64) error
 }

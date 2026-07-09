@@ -7,21 +7,25 @@ import (
 )
 
 type PostCreater interface {
-	CreatePost(ctx context.Context, post *domain.Post) (*domain.Post, error)
+	Create(ctx context.Context, post *domain.Post) (*domain.Post, error)
 }
-type PostReader interface {
-	ReadPost(ctx context.Context, ID int64) (*domain.Post, error)
+type PostReaderByID interface {
+	GetByID(ctx context.Context, ID int64) (*domain.Post, error)
+}
+type PostReaderByTitle interface {
+	GetByTitle(ctx context.Context, title string) (*domain.Post, error)
 }
 
 type PostUpdater interface {
-	UpdatePost(ctx context.Context, post *domain.Post) error
+	Update(ctx context.Context, post *domain.Post) error
 }
 type PostDeleter interface {
-	DeletePost(ctx context.Context, id int64) error
+	Delete(ctx context.Context, id int64) error
 }
 
 type PostRepository interface {
-	PostReader
+	PostReaderByID
+	PostReaderByTitle
 	PostCreater
 	PostUpdater
 	PostDeleter
