@@ -18,24 +18,24 @@ type PostService struct {
 	cache    port.Cache
 }
 
-func (p *PostService) CreatePost(ctx context.Context, userID int64, title, content string) (*domain.Post, error) {
+func (p *PostService) Create(ctx context.Context, userID int64, title, content string) (*domain.Post, error) {
 	domainPost, err := domain.NewPost(userID, title, content)
 	if err != nil {
 		return nil, err
 	}
-	post, err := p.postRepo.CreatePost(ctx, domainPost)
+	post, err := p.postRepo.Create(ctx, domainPost)
 	if err != nil {
 		return nil, ErrLinkedUserNotFound
 	}
 	return post, nil
 }
 
-func (p *PostService) GetPost(ctx context.Context, postID int64) (*domain.Post, error) {
-	cachedPost, err := p.cache.Get(ctx, strconv.FormatInt(postID, 10))
+func (p *PostService) GetByID(ctx context.Context, postID int64) (*domain.Post, error) {
+	cachedPost, err := p.cache.Get(ctx, "postID_"+strconv.FormatInt(postID, 10))
 	if err != nil {
 		switch err {
 		case redis.Nil:
-			post, err := p.postRepo.ReadPost(ctx, postID)
+			post, err := p.postRepo.GetByID(ctx, postID)
 			if err != nil {
 				switch err {
 				case sql.ErrNoRows:
@@ -49,7 +49,10 @@ func (p *PostService) GetPost(ctx context.Context, postID int64) (*domain.Post, 
 				return nil, err
 			}
 
-			p.cache.Set(ctx, string(rune(postID)), data, 10*time.Minute)
+			err = p.cache.Set(ctx, "postID_"+strconv.FormatInt(postID, 10), data, 10*time.Minute)
+			if err != nil {
+				// log
+			}
 			return post, nil
 		default:
 			return nil, ErrUnexpected
@@ -62,8 +65,45 @@ func (p *PostService) GetPost(ctx context.Context, postID int64) (*domain.Post, 
 	}
 	return &post, nil
 }
-func (p *PostService) UpdatePost(ctx context.Context, post *domain.Post) error {
-	err := p.postRepo.UpdatePost(ctx, post)
+
+func (p *PostService) GetByTitle(ctx context.Context, title string) (*domain.Post, error) {
+	cachedPost, err := p.cache.Get(ctx, "postTitle_"+title)
+	if err != nil {
+		switch err {
+		case redis.Nil:
+			post, err := p.postRepo.GetByTitle(ctx, title)
+			if err != nil {
+				switch err {
+				case sql.ErrNoRows:
+					return nil, ErrPostNotFound
+				default:
+					return nil, ErrUnexpected
+				}
+			}
+			data, err := json.Marshal(post)
+			if err != nil {
+				return nil, err
+			}
+
+			err = p.cache.Set(ctx, "postTitle_"+title, data, 10*time.Minute)
+			if err != nil {
+				//log
+			}
+			return post, nil
+		default:
+			return nil, ErrUnexpected
+		}
+	}
+	var post domain.Post
+	err = json.Unmarshal(cachedPost, &post)
+	if err != nil {
+		return nil, ErrCacheUnmarshal
+	}
+	return &post, nil
+}
+
+func (p *PostService) Update(ctx context.Context, post *domain.Post) error {
+	err := p.postRepo.Update(ctx, post)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -77,8 +117,8 @@ func (p *PostService) UpdatePost(ctx context.Context, post *domain.Post) error {
 
 }
 
-func (p *PostService) DeletePost(ctx context.Context, postID int64) error {
-	err := p.postRepo.DeletePost(ctx, postID)
+func (p *PostService) Delete(ctx context.Context, postID int64) error {
+	err := p.postRepo.Delete(ctx, postID)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
