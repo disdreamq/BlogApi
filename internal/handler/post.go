@@ -1,0 +1,122 @@
+package handler
+
+import (
+	"encoding/json"
+	"net/http"
+	"strconv"
+
+	"github.com/disdreamq/BlogApi/internal/domain"
+	"github.com/disdreamq/BlogApi/internal/port"
+	"github.com/disdreamq/BlogApi/internal/service"
+	"github.com/go-chi/chi/v5"
+)
+
+type PostController struct {
+	postService port.PostService
+}
+
+type postRequest struct {
+	UserID  int64  `json:"user_id"`
+	Title   string `json:"title"`
+	Content string `json:"content"`
+}
+
+func NewPostController(postService port.PostService) *PostController {
+	return &PostController{postService: postService}
+
+}
+
+func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	var postReq postRequest
+	if err := json.NewDecoder(r.Body).Decode(&postReq); err != nil {
+		http.Error(w, `{"error": "invalid JSON"}`, http.StatusBadRequest)
+		return
+	}
+	postReq.UserID = r.Context().Value("user_id").(int64)
+	post, err := c.postService.Create(r.Context(), postReq.UserID, postReq.Title, postReq.Content)
+	if err != nil {
+		switch err {
+		case service.ErrUnexpected:
+			http.Error(w, `{"error": "failed to create post"}`, http.StatusInternalServerError)
+			return
+		case service.ErrLinkedUserNotFound:
+			http.Error(w, `{"error": "linked user with this id doesnt exists."}`, http.StatusConflict)
+			return
+		case domain.ErrInvalidTitle:
+			http.Error(w, `"error":"title must contain at least 1 character"`, http.StatusBadRequest)
+		case domain.ErrInvalidTitle:
+			http.Error(w, `"error":"content must contain at least 1 character"`, http.StatusBadRequest)
+		default:
+			http.Error(w, `{"error": "failed to create post"}`, http.StatusBadRequest)
+			return
+		}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(post)
+}
+
+func (c *PostController) GetByID(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	postID, err := strconv.ParseInt(chi.URLParam(r, "post_id"), 10, 64)
+	if err != nil {
+		http.Error(w, `{"error": "invalid post ID"}`, http.StatusBadRequest)
+		return
+	}
+	post, err := c.postService.GetByID(r.Context(), postID)
+	if err != nil {
+		switch err {
+		case service.ErrUserNotFound:
+			http.Error(w, `{"error": "post not found"}`, http.StatusNotFound)
+		default:
+			http.Error(w, `{"error": "failed to get user"}`, http.StatusBadRequest)
+		}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(post)
+}
+
+func (c *PostController) Update(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	var postReq postRequest
+	if err := json.NewDecoder(r.Body).Decode(&postReq); err != nil {
+		http.Error(w, `{"error": "invalid JSON"}`, http.StatusBadRequest)
+		return
+	}
+	postReq.UserID = r.Context().Value("user_id").(int64)
+	err := c.postService.Update(r.Context(), postReq.UserID, postReq.Title, postReq.Content)
+	if err != nil {
+		switch err {
+		case service.ErrUserNotFound:
+			http.Error(w, `{"error": "user not found"}`, http.StatusNotFound)
+			return
+		default:
+			http.Error(w, `{"error": "failed to get user"}`, http.StatusBadRequest)
+			return
+		}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+}
+
+func (c *PostController) Delete(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	postID, err := strconv.ParseInt(chi.URLParam(r, "post_id"), 10, 64)
+	if err != nil {
+		http.Error(w, `{"error": "invalid post ID"}`, http.StatusBadRequest)
+		return
+	}
+	err = c.postService.Delete(r.Context(), postID)
+	if err != nil {
+		switch err {
+		case service.ErrPostNotFound:
+			http.Error(w, `{"error": "post not found"}`, http.StatusNotFound)
+		default:
+			http.Error(w, `{"error": "failed to get post"}`, http.StatusBadRequest)
+		}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusNoContent)
+}
