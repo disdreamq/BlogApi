@@ -36,7 +36,7 @@ func NewPostRepository(db *sqlx.DB) *PostRepository {
 	return &PostRepository{db: db}
 }
 
-func (r *PostRepository) CreatePost(ctx context.Context, post *domain.Post) (*domain.Post, error) {
+func (r *PostRepository) Create(ctx context.Context, post *domain.Post) (*domain.Post, error) {
 
 	tx, err := r.db.Beginx()
 	if err != nil {
@@ -64,7 +64,7 @@ func (r *PostRepository) CreatePost(ctx context.Context, post *domain.Post) (*do
 	return dbPost.toDomain(), nil
 }
 
-func (r *PostRepository) ReadPost(ctx context.Context, userID int64) (*domain.Post, error) {
+func (r *PostRepository) GetByID(ctx context.Context, userID int64) (*domain.Post, error) {
 	txCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
@@ -74,6 +74,22 @@ func (r *PostRepository) ReadPost(ctx context.Context, userID int64) (*domain.Po
     `
 	var post dbPost
 	err := r.db.GetContext(txCtx, &post, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	return post.toDomain(), nil
+}
+
+func (r *PostRepository) GetByTitle(ctx context.Context, title string) (*domain.Post, error) {
+	txCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
+
+	query := `
+        SELECT * FROM posts
+        WHERE title = $1
+    `
+	var post dbPost
+	err := r.db.GetContext(txCtx, &post, query, title)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +112,7 @@ func (r *PostRepository) ReadAllUserPosts(ctx context.Context, userID int64) ([]
 	return posts, nil
 }
 
-func (r *PostRepository) UpdatePost(ctx context.Context, post *domain.Post) error {
+func (r *PostRepository) Update(ctx context.Context, post *domain.Post) error {
 	tx, err := r.db.Beginx()
 	if err != nil {
 		return err
@@ -122,7 +138,7 @@ func (r *PostRepository) UpdatePost(ctx context.Context, post *domain.Post) erro
 	return nil
 }
 
-func (r *PostRepository) DeletePost(ctx context.Context, postID int64) error {
+func (r *PostRepository) Delete(ctx context.Context, postID int64) error {
 	tx, err := r.db.Beginx()
 	if err != nil {
 		return err
