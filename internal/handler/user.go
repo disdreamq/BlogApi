@@ -55,7 +55,7 @@ func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	userID, err := strconv.ParseInt(chi.URLParam(r, "user_id"), 10, 64)
 	if err != nil {
-		http.Error(w, `{"error": "invalid userID"}`, http.StatusBadRequest)
+		http.Error(w, `{"error": "invalid user ID"}`, http.StatusBadRequest)
 		return
 	}
 	user, err := c.userService.GetByID(r.Context(), userID)
@@ -115,7 +115,7 @@ func (c *UserController) Delete(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	userID, err := strconv.ParseInt(chi.URLParam(r, "user_id"), 10, 64)
 	if err != nil {
-		http.Error(w, `{"error": "invalid userID"}`, http.StatusBadRequest)
+		http.Error(w, `{"error": "invalid user ID"}`, http.StatusBadRequest)
 		return
 	}
 	err = c.userService.Delete(r.Context(), userID)
