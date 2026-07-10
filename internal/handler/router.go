@@ -21,6 +21,7 @@ func NewRouter(
 	ProtectedPRM int,
 ) *chi.Mux {
 	r := chi.NewRouter()
+	r.Use(middleware.RecoveryMiddleware)
 
 	// Public routes
 	r.Group(func(r chi.Router) {
