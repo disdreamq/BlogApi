@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"sync"
 
 	"github.com/kelseyhightower/envconfig"
@@ -30,7 +31,6 @@ type Config struct {
 
 	// Auth
 	SecretKey string `envconfig:"SECRET_KEY" required:"true"`
-	Alghoritm string `envconfig:"ALGHORITM" required:"true"`
 
 	// CORS
 	CORSOrigins []string `envconfig:"CORS_ORIGINS" required:"true"`
@@ -40,10 +40,21 @@ type Config struct {
 }
 
 func (c *Config) PostgresDSN() string {
-	return fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		c.PostgresHost, c.PostgresPort, c.PostgresUser, c.PostgresPassword, c.PostgresDB,
-	)
+	user := url.PathEscape(c.PostgresUser)
+	password := url.PathEscape(c.PostgresPassword)
+
+	dsn := url.URL{
+		Scheme: "postgres",
+		User:   url.UserPassword(user, password),
+		Host:   fmt.Sprintf("%s:%d", c.PostgresHost, c.PostgresPort),
+		Path:   c.PostgresDB,
+	}
+
+	params := url.Values{}
+	params.Add("sslmode", "disable")
+	dsn.RawQuery = params.Encode()
+
+	return dsn.String()
 }
 
 func (c *Config) RedisAddr() string {
