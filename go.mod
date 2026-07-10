@@ -9,6 +9,7 @@ require (
 
 require (
 	github.com/go-chi/chi/v5 v5.3.1
+	github.com/go-redis/redis_rate/v10 v10.0.1
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/jmoiron/sqlx v1.4.0
