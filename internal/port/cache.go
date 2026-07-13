@@ -6,15 +6,15 @@ import (
 )
 
 type CacheGetter interface {
-	Get(ctx context.Context, key string) (string, error)
+	Get(ctx context.Context, key string) (string, bool)
 }
 
 type CacheSetter interface {
-	Set(ctx context.Context, key string, value any, ttl time.Duration) error
+	Set(ctx context.Context, key string, value any, ttl time.Duration) bool
 }
 
 type CacheDeleter interface {
-	Del(ctx context.Context, key string) error
+	Del(ctx context.Context, key string) bool
 }
 
 type Cache interface {
