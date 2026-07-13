@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 
+	"github.com/disdreamq/BlogApi/internal/domain"
 	"github.com/disdreamq/BlogApi/internal/port"
 	"github.com/disdreamq/BlogApi/internal/service"
 	"github.com/go-chi/chi/v5"
@@ -20,6 +22,22 @@ type userRequest struct {
 	Password string `json:"password"`
 }
 
+type UserResponse struct {
+	ID        int64     `json:"id"`
+	Username  string    `json:"username"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+func NewUserResponse(u *domain.User) *UserResponse {
+	return &UserResponse{
+		ID:        u.ID,
+		Username:  u.Username,
+		Email:     u.Email,
+		CreatedAt: u.CreatedAt,
+	}
+}
+
 func NewUserController(userService port.UserService) *UserController {
 	return &UserController{userService: userService}
 
@@ -32,23 +50,25 @@ func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error": "invalid JSON"}`, http.StatusBadRequest)
 		return
 	}
-	user, err := c.userService.Create(r.Context(), userReq.Username, userReq.Email, userReq.Password)
+	u, err := c.userService.Create(r.Context(), userReq.Username, userReq.Email, userReq.Password)
 	if err != nil {
 		switch err {
 		case service.ErrUnexpected:
+			println(err)
 			http.Error(w, `{"error": "failed to create user"}`, http.StatusInternalServerError)
 			return
 		case service.ErrUserAlreadyExists:
 			http.Error(w, `{"error": "user with this email already exists"}`, http.StatusConflict)
 			return
 		default:
+			print(err)
 			http.Error(w, `{"error": "failed to create user"}`, http.StatusBadRequest)
 			return
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(user)
+	json.NewEncoder(w).Encode(NewUserResponse(u))
 }
 
 func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
