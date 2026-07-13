@@ -13,5 +13,5 @@ type AuthService interface {
 type TokenProvider interface {
 	GenerateToken(_ context.Context, userID int64, email string) (string, error)
 	ValidateToken(tokenString string) (*domain.TokenPayload, error)
-	RefreshToken(oldToken string) (string, error)
+	// RefreshToken(oldToken string) (string, error)
 }

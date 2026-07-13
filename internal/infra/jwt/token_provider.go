@@ -52,4 +52,4 @@ func (p *Provider) ValidateToken(tokenString string) (*domain.TokenPayload, erro
 	return domain.NewPayload(claims, time.Now().Add(p.expiry)), nil
 }
 
-func (p *Provider) RefreshToken(oldToken string) (string, error)
+// func (p *Provider) RefreshToken(oldToken string) (string, error)
