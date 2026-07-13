@@ -3,6 +3,7 @@ package handler
 import (
 	"time"
 
+	"github.com/disdreamq/BlogApi/internal/infra/jwt"
 	"github.com/disdreamq/BlogApi/internal/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/redis/go-redis/v9"
@@ -33,7 +34,7 @@ func NewRouter(
 	// Protected routes
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.NewRateLimitMiddleware(rdb, ProtectedPRM).Limit)
-		// r.Use(middleware.NewAuthMiddleware(jwt.NewProvider(secret, expiry)).Authenticate)
+		r.Use(middleware.NewAuthMiddleware(jwt.NewProvider(secret, expiry)).Authenticate)
 
 		r.Route("/users", func(r chi.Router) {
 			r.Get("/{userID}", userCtrl.GetByID)
