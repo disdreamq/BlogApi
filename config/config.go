@@ -31,6 +31,11 @@ type Config struct {
 
 	// Auth
 	SecretKey string `envconfig:"SECRET_KEY" required:"true"`
+	Expiry    int    `envconfig:"EXPIRY" default:"10"`
+
+	// PRM
+	PublicRPM    int `envconfig:"PUBLICK_RPM" default:"10"`
+	ProtectedRPM int `envconfig:"PROTECTED_RPM" default:"10"`
 
 	// CORS
 	CORSOrigins []string `envconfig:"CORS_ORIGINS" required:"true"`
