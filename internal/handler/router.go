@@ -3,7 +3,6 @@ package handler
 import (
 	"time"
 
-	"github.com/disdreamq/BlogApi/internal/infra/jwt"
 	"github.com/disdreamq/BlogApi/internal/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/redis/go-redis/v9"
@@ -11,12 +10,12 @@ import (
 
 // Добавить rate limmiter и почти приехал
 func NewRouter(
+	rdb *redis.Client,
 	userCtrl *UserController,
 	postCtrl *PostController,
 	authCtrl *AuthController,
 	secret string,
 	expiry time.Duration,
-	rdb *redis.Client,
 	PublicRPM int,
 	ProtectedPRM int,
 ) *chi.Mux {
@@ -33,7 +32,7 @@ func NewRouter(
 	// Protected routes
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.NewRateLimitMiddleware(rdb, ProtectedPRM).Limit)
-		r.Use(middleware.NewAuthMiddleware(jwt.NewProvider(secret, expiry)).Authenticate)
+		// r.Use(middleware.NewAuthMiddleware(jwt.NewProvider(secret, expiry)).Authenticate)
 
 		r.Route("/users", func(r chi.Router) {
 			r.Get("/{userID}", userCtrl.GetByID)
@@ -42,6 +41,7 @@ func NewRouter(
 			r.Delete("/{userID}", userCtrl.Delete)
 		})
 		r.Route("/posts", func(r chi.Router) {
+			r.Post("/", postCtrl.Create)
 			r.Get("/{postID}", postCtrl.GetByID)
 			r.Get("/{title}", postCtrl.GetByTitle)
 			r.Put("/{postID}", postCtrl.Update)
