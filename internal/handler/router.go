@@ -21,6 +21,7 @@ func NewRouter(
 ) *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(middleware.RecoveryMiddleware)
+	r.Use(middleware.LoggingMiddleware)
 
 	// Public routes
 	r.Group(func(r chi.Router) {
