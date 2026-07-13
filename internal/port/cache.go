@@ -6,11 +6,11 @@ import (
 )
 
 type CacheGetter interface {
-	Get(ctx context.Context, key string) ([]byte, error)
+	Get(ctx context.Context, key string) (string, error)
 }
 
 type CacheSetter interface {
-	Set(ctx context.Context, key string, value []byte, ttl time.Duration) error
+	Set(ctx context.Context, key string, value any, ttl time.Duration) error
 }
 
 type CacheDeleter interface {
