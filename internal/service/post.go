@@ -9,6 +9,7 @@ import (
 
 	"github.com/disdreamq/BlogApi/internal/domain"
 	"github.com/disdreamq/BlogApi/internal/port"
+	"github.com/rs/zerolog/log"
 )
 
 // TODO F7. Получение списка постов автора по username с пагинацией (limit/offset), сортировка по created_at DESC (публично).
@@ -30,6 +31,11 @@ func (p *PostService) Create(ctx context.Context, userID int64, title, content s
 	if err != nil {
 		return nil, ErrLinkedUserNotFound
 	}
+	logger := log.Ctx(ctx)
+	logger.Info().
+		Int64("user_id", userID).
+		Str("title", title).
+		Msg("Created post")
 	return post, nil
 }
 
@@ -60,6 +66,10 @@ func (p *PostService) GetByID(ctx context.Context, postID int64) (*domain.Post, 
 	if err != nil {
 		return nil, ErrCacheUnmarshal
 	}
+	logger := log.Ctx(ctx)
+	logger.Debug().
+		Int64("post_id", postID).
+		Msg("Read post")
 	return &post, nil
 }
 
@@ -90,6 +100,10 @@ func (p *PostService) GetByTitle(ctx context.Context, title string) (*domain.Pos
 	if err != nil {
 		return nil, ErrCacheUnmarshal
 	}
+	logger := log.Ctx(ctx)
+	logger.Debug().
+		Str("title", title).
+		Msg("Read post")
 	return &post, nil
 
 }
@@ -111,6 +125,10 @@ func (p *PostService) Update(ctx context.Context, currUserID, postID int64, titl
 			return ErrUnexpected
 		}
 	}
+	logger := log.Ctx(ctx)
+	logger.Debug().
+		Int64("post_id", postID).
+		Msg("Updated post")
 	p.cache.Del(ctx, strconv.FormatInt(postID, 10))
 	return nil
 
@@ -129,6 +147,10 @@ func (p *PostService) Delete(ctx context.Context, currUserID int64, postID int64
 			return ErrUnexpected
 		}
 	}
+	logger := log.Ctx(ctx)
+	logger.Debug().
+		Int64("post_id", postID).
+		Msg("Deleted post")
 	p.cache.Del(ctx, strconv.FormatInt(postID, 10))
 	return nil
 }
@@ -138,7 +160,17 @@ func (p *PostService) validateCurrUser(ctx context.Context, currUserID int64, po
 		return false
 	}
 	if post.UserID != currUserID {
+		logger := log.Ctx(ctx)
+		logger.Debug().
+			Int64("curr_user_id", currUserID).
+			Int64("user_id", post.UserID).
+			Msg("Validation failed for user.")
 		return false
 	}
+	logger := log.Ctx(ctx)
+	logger.Debug().
+		Int64("curr_user_id", currUserID).
+		Int64("user_id", post.UserID).
+		Msg("Validated user.")
 	return true
 }
