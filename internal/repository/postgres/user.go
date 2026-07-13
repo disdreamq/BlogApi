@@ -34,7 +34,7 @@ func NewUserRepository(db *sqlx.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) (*domain.User, error) {
+func (r *UserRepository) Create(ctx context.Context, user *domain.User) (*domain.User, error) {
 
 	tx, err := r.db.Beginx()
 	if err != nil {
@@ -59,11 +59,10 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *domain.User) (*do
 	if err = tx.Commit(); err != nil {
 		return nil, err
 	}
-
 	return userRow.toDomain(), nil
 }
 
-func (r *UserRepository) GetUserByID(ctx context.Context, userID int64) (*domain.User, error) {
+func (r *UserRepository) GetByID(ctx context.Context, userID int64) (*domain.User, error) {
 	txCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
@@ -79,7 +78,7 @@ func (r *UserRepository) GetUserByID(ctx context.Context, userID int64) (*domain
 	return user.toDomain(), nil
 }
 
-func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*domain.User, error) {
+func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
 	txCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
@@ -95,7 +94,7 @@ func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*dom
 	return user.toDomain(), nil
 }
 
-func (r *UserRepository) UpdateUser(ctx context.Context, user *domain.User) error {
+func (r *UserRepository) Update(ctx context.Context, user *domain.User) error {
 	tx, err := r.db.Beginx()
 	if err != nil {
 		return err
@@ -124,7 +123,7 @@ func (r *UserRepository) UpdateUser(ctx context.Context, user *domain.User) erro
 	return nil
 }
 
-func (r *UserRepository) DeleteUser(ctx context.Context, userID int64) error {
+func (r *UserRepository) Delete(ctx context.Context, userID int64) error {
 	tx, err := r.db.Beginx()
 	if err != nil {
 		return err
