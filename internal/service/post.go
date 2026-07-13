@@ -9,7 +9,6 @@ import (
 
 	"github.com/disdreamq/BlogApi/internal/domain"
 	"github.com/disdreamq/BlogApi/internal/port"
-	"github.com/redis/go-redis/v9"
 )
 
 // TODO F7. Получение списка постов автора по username с пагинацией (limit/offset), сортировка по created_at DESC (публично).
@@ -35,35 +34,29 @@ func (p *PostService) Create(ctx context.Context, userID int64, title, content s
 }
 
 func (p *PostService) GetByID(ctx context.Context, postID int64) (*domain.Post, error) {
-	cachedPost, err := p.cache.Get(ctx, "postID_"+strconv.FormatInt(postID, 10))
-	if err != nil {
-		switch err {
-		case redis.Nil:
-			post, err := p.postRepo.GetByID(ctx, postID)
-			if err != nil {
-				switch err {
-				case sql.ErrNoRows:
-					return nil, ErrPostNotFound
-				default:
-					return nil, ErrUnexpected
-				}
+	cachedPost, ok := p.cache.Get(ctx, "postTitle_"+strconv.FormatInt(postID, 10))
+	if !ok {
+		post, err := p.postRepo.GetByTitle(ctx, strconv.FormatInt(postID, 10))
+		if err != nil {
+			switch err {
+			case sql.ErrNoRows:
+				return nil, ErrPostNotFound
+			default:
+				return nil, ErrUnexpected
 			}
-			data, err := json.Marshal(post)
-			if err != nil {
-				return nil, err
-			}
+		}
+		data, err := json.Marshal(post)
+		if err != nil {
+			return nil, err
+		}
 
-			err = p.cache.Set(ctx, "postID_"+strconv.FormatInt(postID, 10), data, 10*time.Minute)
-			if err != nil {
-				// log
-			}
+		if ok := p.cache.Set(ctx, "postTitle_"+strconv.FormatInt(postID, 10), data, 10*time.Minute); !ok {
 			return post, nil
-		default:
-			return nil, ErrUnexpected
 		}
 	}
+
 	var post domain.Post
-	err = json.Unmarshal([]byte(cachedPost), &post)
+	err := json.Unmarshal([]byte(cachedPost), &post)
 	if err != nil {
 		return nil, ErrCacheUnmarshal
 	}
@@ -71,43 +64,37 @@ func (p *PostService) GetByID(ctx context.Context, postID int64) (*domain.Post, 
 }
 
 func (p *PostService) GetByTitle(ctx context.Context, title string) (*domain.Post, error) {
-	cachedPost, err := p.cache.Get(ctx, "postTitle_"+title)
-	if err != nil {
-		switch err {
-		case redis.Nil:
-			post, err := p.postRepo.GetByTitle(ctx, title)
-			if err != nil {
-				switch err {
-				case sql.ErrNoRows:
-					return nil, ErrPostNotFound
-				default:
-					return nil, ErrUnexpected
-				}
+	cachedPost, ok := p.cache.Get(ctx, "postTitle_"+title)
+	if !ok {
+		post, err := p.postRepo.GetByTitle(ctx, title)
+		if err != nil {
+			switch err {
+			case sql.ErrNoRows:
+				return nil, ErrPostNotFound
+			default:
+				return nil, ErrUnexpected
 			}
-			data, err := json.Marshal(post)
-			if err != nil {
-				return nil, err
-			}
+		}
+		data, err := json.Marshal(post)
+		if err != nil {
+			return nil, err
+		}
 
-			err = p.cache.Set(ctx, "postTitle_"+title, data, 10*time.Minute)
-			if err != nil {
-				//log
-			}
+		if ok := p.cache.Set(ctx, "postTitle_"+title, data, 10*time.Minute); !ok {
 			return post, nil
-		default:
-			return nil, ErrUnexpected
 		}
 	}
+
 	var post domain.Post
-	err = json.Unmarshal([]byte(cachedPost), &post)
+	err := json.Unmarshal([]byte(cachedPost), &post)
 	if err != nil {
 		return nil, ErrCacheUnmarshal
 	}
 	return &post, nil
+
 }
 
 func (p *PostService) Update(ctx context.Context, currUserID, postID int64, title, content string) error {
-
 	if ok := p.validateCurrUser(ctx, currUserID, postID); !ok {
 		return ErrMethodNotAllowed
 	}
@@ -124,7 +111,7 @@ func (p *PostService) Update(ctx context.Context, currUserID, postID int64, titl
 			return ErrUnexpected
 		}
 	}
-	p.cache.Del(ctx, string(rune(post.ID)))
+	p.cache.Del(ctx, strconv.FormatInt(postID, 10))
 	return nil
 
 }
@@ -142,7 +129,7 @@ func (p *PostService) Delete(ctx context.Context, currUserID int64, postID int64
 			return ErrUnexpected
 		}
 	}
-	p.cache.Del(ctx, string(rune(postID)))
+	p.cache.Del(ctx, strconv.FormatInt(postID, 10))
 	return nil
 }
 func (p *PostService) validateCurrUser(ctx context.Context, currUserID int64, postID int64) bool {
