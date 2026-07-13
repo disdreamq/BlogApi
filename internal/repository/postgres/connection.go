@@ -5,12 +5,12 @@ import (
 	"time"
 
 	"github.com/disdreamq/BlogApi/config"
-	_ "github.com/jackc/pgx/v5"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 )
 
-func NewPostgresDB(cfg config.Config) (*sqlx.DB, error) {
-	db, err := sqlx.Connect("postgres", cfg.PostgresDSN())
+func NewPostgresDB(cfg *config.Config) (*sqlx.DB, error) {
+	db, err := sqlx.Connect("pgx", cfg.PostgresDSN())
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
