@@ -29,6 +29,7 @@ func (r *RedisCache) Get(ctx context.Context, key string) (string, bool) {
 			return val, false
 		default:
 			logger.Err(err).
+				Str("trace_id", ctx.Value("trace_id").(string)).
 				Str("key", key)
 		}
 	}
@@ -40,6 +41,7 @@ func (r *RedisCache) Get(ctx context.Context, key string) (string, bool) {
 		r.cacheHit.Add(1)
 	}
 	logger.Debug().
+		Str("trace_id", ctx.Value("trace_id").(string)).
 		Str("key", key).
 		Bool("hit", hit)
 	return val, true
@@ -54,6 +56,7 @@ func (r *RedisCache) Set(ctx context.Context, key string, value any, ttl time.Du
 		return false
 	}
 	logger.Debug().
+		Str("trace_id", ctx.Value("trace_id").(string)).
 		Str("key", key).
 		Msg("Set to cache")
 	return true
@@ -64,10 +67,12 @@ func (r *RedisCache) Del(ctx context.Context, key string) bool {
 	err := r.rdb.Del(ctx, key).Err()
 	if err != nil {
 		logger.Err(err).
+			Str("trace_id", ctx.Value("trace_id").(string)).
 			Str("key", key)
 		return false
 	}
 	logger.Debug().
+		Str("trace_id", ctx.Value("trace_id").(string)).
 		Str("key", key).
 		Msg("Deleted from cache")
 	return true

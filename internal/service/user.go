@@ -39,6 +39,7 @@ func (u *UserService) Create(ctx context.Context, username, email, password stri
 	}
 	logger := log.Ctx(ctx)
 	logger.Info().
+		Str("trace_id", ctx.Value("trace_id").(string)).
 		Int64("userId", user.ID).
 		Str("username", username).
 		Str("email", email).
@@ -58,6 +59,7 @@ func (u *UserService) GetByID(ctx context.Context, userID int64) (*domain.User, 
 	}
 	logger := log.Ctx(ctx)
 	logger.Debug().
+		Str("trace_id", ctx.Value("trace_id").(string)).
 		Int64("userId", userID).
 		Msg("Read user.")
 	return user, nil
@@ -75,6 +77,7 @@ func (u *UserService) GetByEmail(ctx context.Context, email string) (*domain.Use
 	}
 	logger := log.Ctx(ctx)
 	logger.Debug().
+		Str("trace_id", ctx.Value("trace_id").(string)).
 		Str("title", email).
 		Msg("Read user.")
 	return user, nil
@@ -105,6 +108,7 @@ func (u *UserService) Update(ctx context.Context, currUserID, userID int64, user
 	}
 	logger := log.Ctx(ctx)
 	logger.Debug().
+		Str("trace_id", ctx.Value("trace_id").(string)).
 		Int64("user_id", userID).
 		Str("username", username).
 		Str("email", email).
@@ -129,24 +133,27 @@ func (u *UserService) Delete(ctx context.Context, currUserID int64, userID int64
 	}
 	logger := log.Ctx(ctx)
 	logger.Debug().
+		Str("trace_id", ctx.Value("trace_id").(string)).
 		Int64("user_id", userID).
 		Msg("Delete user.")
 	return nil
 }
 func (p *UserService) validateCurrUser(ctx context.Context, currUserID, userID int64) bool {
 	user, err := p.GetByID(ctx, userID)
-	logger := log.Ctx(ctx)
 	if err != nil {
 		return false
 	}
+	logger := log.Ctx(ctx)
 	if user.ID != currUserID {
 		logger.Debug().
+			Str("trace_id", ctx.Value("trace_id").(string)).
 			Int64("current_user_id", currUserID).
 			Int64("user_id", userID).
 			Msg("Validation failed for user.")
 		return false
 	}
 	logger.Debug().
+		Str("trace_id", ctx.Value("trace_id").(string)).
 		Int64("current_user_id", currUserID).
 		Int64("user_id", userID).
 		Msg("Validate user.")
