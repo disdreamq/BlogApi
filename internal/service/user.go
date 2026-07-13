@@ -14,6 +14,10 @@ type UserService struct {
 	hasher   port.Hasher
 }
 
+func NewUserService(userRepo port.UserRepository, hasher port.Hasher) *UserService {
+	return &UserService{userRepo: userRepo, hasher: hasher}
+}
+
 func (u *UserService) Create(ctx context.Context, username, email, password string) (*domain.User, error) {
 	passwordHash, err := processPassword(password, u.hasher)
 	if err != nil {
@@ -29,7 +33,7 @@ func (u *UserService) Create(ctx context.Context, username, email, password stri
 		case sql.ErrNoRows:
 			return nil, ErrUserAlreadyExists
 		default:
-			return nil, ErrUnexpected
+			return nil, err
 		}
 
 	}

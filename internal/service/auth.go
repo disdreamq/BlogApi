@@ -2,30 +2,26 @@ package service
 
 import (
 	"context"
-	"time"
 
 	"github.com/disdreamq/BlogApi/internal/domain"
 	"github.com/disdreamq/BlogApi/internal/port"
 )
 
 type AuthService struct {
-	userService   port.UserRepository
+	userService   port.UserService
 	hasher        port.Hasher
 	tokenProvider port.TokenProvider
-	tokenTTL      time.Duration
 }
 
 func NewAuthService(
-	userService port.UserRepository,
+	userService port.UserService,
 	hasher port.Hasher,
 	tokenProvider port.TokenProvider,
-	tokenTTL time.Duration,
 ) *AuthService {
 	return &AuthService{
 		userService:   userService,
 		hasher:        hasher,
 		tokenProvider: tokenProvider,
-		tokenTTL:      tokenTTL,
 	}
 }
 

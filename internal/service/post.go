@@ -12,9 +12,14 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+// TODO F7. Получение списка постов автора по username с пагинацией (limit/offset), сортировка по created_at DESC (публично).
 type PostService struct {
 	postRepo port.PostRepository
 	cache    port.Cache
+}
+
+func NewPostService(postRepo port.PostRepository, cache port.Cache) *PostService {
+	return &PostService{postRepo: postRepo, cache: cache}
 }
 
 func (p *PostService) Create(ctx context.Context, userID int64, title, content string) (*domain.Post, error) {
@@ -58,7 +63,7 @@ func (p *PostService) GetByID(ctx context.Context, postID int64) (*domain.Post, 
 		}
 	}
 	var post domain.Post
-	err = json.Unmarshal(cachedPost, &post)
+	err = json.Unmarshal([]byte(cachedPost), &post)
 	if err != nil {
 		return nil, ErrCacheUnmarshal
 	}
@@ -94,7 +99,7 @@ func (p *PostService) GetByTitle(ctx context.Context, title string) (*domain.Pos
 		}
 	}
 	var post domain.Post
-	err = json.Unmarshal(cachedPost, &post)
+	err = json.Unmarshal([]byte(cachedPost), &post)
 	if err != nil {
 		return nil, ErrCacheUnmarshal
 	}
