@@ -5,6 +5,7 @@ import (
 
 	"github.com/disdreamq/BlogApi/internal/domain"
 	"github.com/disdreamq/BlogApi/internal/port"
+	"github.com/rs/zerolog/log"
 )
 
 type AuthService struct {
@@ -26,6 +27,7 @@ func NewAuthService(
 }
 
 func (s *AuthService) Login(ctx context.Context, email, password string) (*domain.AuthResult, error) {
+	logger := log.Ctx(ctx)
 	user, err := s.userService.GetByEmail(ctx, email)
 	if err != nil {
 		return nil, err
@@ -38,5 +40,8 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*domai
 		return nil, ErrCanNotLogin
 	}
 	payload, _ := s.tokenProvider.ValidateToken(token)
+	logger.Info().
+		Int64("user_id", user.ID).
+		Msg("User loggined")
 	return domain.NewAuthResult(token, payload), nil
 }
