@@ -15,10 +15,19 @@ type PostController struct {
 	postService port.PostService
 }
 
-type postRequest struct {
+type CreatePostRequest struct {
 	UserID  int64  `json:"user_id"`
 	Title   string `json:"title"`
 	Content string `json:"content"`
+}
+
+// PostResponse represents a post in the response
+type PostResponse struct {
+	ID        int64       `json:"id"`
+	UserID    int64       `json:"user_id"`
+	Title     string      `json:"title"`
+	Content   string      `json:"content"`
+	CreatedAt interface{} `json:"created_at"`
 }
 
 func NewPostController(postService port.PostService) *PostController {
@@ -26,9 +35,24 @@ func NewPostController(postService port.PostService) *PostController {
 
 }
 
+// Create handles creating a new post
+// @Summary      Create a new post
+// @Description  Creates a new post for the authenticated user (requires authentication)
+// @Tags         posts
+// @Accept       json
+// @Produce      json
+// @Param        Authorization  header      string  true  "Bearer token" Format(bearer)
+// @Security       BearerAuth
+// @Param        request  body      CreatePostRequest  true  "Post data"
+// @Success      201      {object}  PostResponse
+// @Failure      400      {object} ErrorResponse  "invalid JSON / invalid title or content"
+// @Failure      401      {object} ErrorResponse  "unauthorized"
+// @Failure      409      {object} ErrorResponse  "linked user with this id doesnt exists"
+// @Failure      500      {object} ErrorResponse  "failed to create post"
+// @Router       /posts/ [post]
 func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var postReq postRequest
+	var postReq CreatePostRequest
 	if err := json.NewDecoder(r.Body).Decode(&postReq); err != nil {
 		http.Error(w, `{"error": "invalid JSON"}`, http.StatusBadRequest)
 		return
@@ -57,6 +81,21 @@ func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(post)
 }
 
+// GetByID retrieves a post by its ID
+// @Summary      Get post by ID
+// @Description  Returns a single post by its ID (requires authentication)
+// @Tags         posts
+// @Accept       json
+// @Produce      json
+// @Param        Authorization  header      string  true  "Bearer token" Format(bearer)
+// @Security       BearerAuth
+// @Param        postID  path      int  true  "Post ID"
+// @Success      200     {object}  PostResponse
+// @Failure      400     {object} ErrorResponse  "invalid post ID"
+// @Failure      401     {object} ErrorResponse  "unauthorized"
+// @Failure      404     {object} ErrorResponse  "post not found"
+// @Failure      500     {object} ErrorResponse  "failed to get post"
+// @Router       /posts/{postID} [get]
 func (c *PostController) GetByID(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	postID, err := strconv.ParseInt(chi.URLParam(r, "postID"), 10, 64)
@@ -78,6 +117,20 @@ func (c *PostController) GetByID(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(post)
 }
 
+// GetByTitle retrieves a post by its title
+// @Summary      Get post by title
+// @Description  Returns a single post by its title (requires authentication)
+// @Tags         posts
+// @Accept       json
+// @Produce      json
+// @Param        Authorization  header      string  true  "Bearer token" Format(bearer)
+// @Security       BearerAuth
+// @Param        title   path      string  true  "Post Title"
+// @Success      200     {object}  PostResponse
+// @Failure      400     {object} ErrorResponse  "invalid post title / failed to get post"
+// @Failure      401     {object} ErrorResponse  "unauthorized"
+// @Failure      404     {object} ErrorResponse  "post not found"
+// @Router       /posts/{title} [get]
 func (c *PostController) GetByTitle(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	title := chi.URLParam(r, "title")
@@ -99,9 +152,25 @@ func (c *PostController) GetByTitle(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(post)
 }
 
+// Update updates an existing post
+// @Summary      Update a post
+// @Description  Updates an existing post by ID (requires authentication)
+// @Tags         posts
+// @Accept       json
+// @Produce      json
+// @Param        Authorization  header      string  true  "Bearer token" Format(bearer)
+// @Security       BearerAuth
+// @Param        postID    path      int                true  "Post ID"
+// @Param        request   body      CreatePostRequest  true  "Post data to update"
+// @Success      200       {string} string             "OK"
+// @Failure      400       {object} ErrorResponse      "invalid post ID / invalid JSON / invalid user ID"
+// @Failure      401       {object} ErrorResponse      "unauthorized"
+// @Failure      404       {object} ErrorResponse      "user not found"
+// @Failure      500       {object} ErrorResponse      "failed to get post"
+// @Router       /posts/{postID} [put]
 func (c *PostController) Update(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var postReq postRequest
+	var postReq CreatePostRequest
 	if err := json.NewDecoder(r.Body).Decode(&postReq); err != nil {
 		http.Error(w, `{"error": "invalid JSON"}`, http.StatusBadRequest)
 		return
@@ -127,6 +196,21 @@ func (c *PostController) Update(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// Delete removes a post by ID
+// @Summary      Delete a post
+// @Description  Removes a post by ID (requires authentication)
+// @Tags         posts
+// @Accept       json
+// @Produce      json
+// @Param        Authorization  header      string  true  "Bearer token" Format(bearer)
+// @Security       BearerAuth
+// @Param        postID  path      int  true  "Post ID"
+// @Success      204     {string} string  "No Content"
+// @Failure      400     {object} ErrorResponse  "invalid post ID / invalid user ID"
+// @Failure      401     {object} ErrorResponse  "unauthorized"
+// @Failure      404     {object} ErrorResponse  "post not found"
+// @Failure      500     {object} ErrorResponse  "failed to get post"
+// @Router       /posts/{postID} [delete]
 func (c *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	postID, err := strconv.ParseInt(chi.URLParam(r, "postID"), 10, 64)
