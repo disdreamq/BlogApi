@@ -6,9 +6,9 @@ import (
 
 	"github.com/disdreamq/BlogApi/internal/domain"
 	"github.com/disdreamq/BlogApi/internal/port"
+	"github.com/rs/zerolog/log"
 )
 
-// TODO логирование
 type UserService struct {
 	userRepo port.UserRepository
 	hasher   port.Hasher
@@ -37,6 +37,12 @@ func (u *UserService) Create(ctx context.Context, username, email, password stri
 		}
 
 	}
+	logger := log.Ctx(ctx)
+	logger.Info().
+		Int64("userId", user.ID).
+		Str("username", username).
+		Str("email", email).
+		Msg("User created.")
 	return user, nil
 }
 
@@ -50,6 +56,10 @@ func (u *UserService) GetByID(ctx context.Context, userID int64) (*domain.User, 
 			return nil, ErrUnexpected
 		}
 	}
+	logger := log.Ctx(ctx)
+	logger.Debug().
+		Int64("userId", userID).
+		Msg("Read user.")
 	return user, nil
 }
 
@@ -63,6 +73,10 @@ func (u *UserService) GetByEmail(ctx context.Context, email string) (*domain.Use
 			return nil, ErrUnexpected
 		}
 	}
+	logger := log.Ctx(ctx)
+	logger.Debug().
+		Str("title", email).
+		Msg("Read user.")
 	return user, nil
 }
 
@@ -89,6 +103,12 @@ func (u *UserService) Update(ctx context.Context, currUserID, userID int64, user
 			return ErrUnexpected
 		}
 	}
+	logger := log.Ctx(ctx)
+	logger.Debug().
+		Int64("user_id", userID).
+		Str("username", username).
+		Str("email", email).
+		Msg("Update user.")
 	return nil
 }
 
@@ -107,16 +127,29 @@ func (u *UserService) Delete(ctx context.Context, currUserID int64, userID int64
 			return ErrUnexpected
 		}
 	}
+	logger := log.Ctx(ctx)
+	logger.Debug().
+		Int64("user_id", userID).
+		Msg("Delete user.")
 	return nil
 }
 func (p *UserService) validateCurrUser(ctx context.Context, currUserID, userID int64) bool {
 	user, err := p.GetByID(ctx, userID)
+	logger := log.Ctx(ctx)
 	if err != nil {
 		return false
 	}
 	if user.ID != currUserID {
+		logger.Debug().
+			Int64("current_user_id", currUserID).
+			Int64("user_id", userID).
+			Msg("Validation failed for user.")
 		return false
 	}
+	logger.Debug().
+		Int64("current_user_id", currUserID).
+		Int64("user_id", userID).
+		Msg("Validate user.")
 	return true
 }
 
