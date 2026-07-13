@@ -1,0 +1,48 @@
+package middleware
+
+import (
+	"context"
+	"net/http"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
+)
+
+type responseWriter struct {
+	http.ResponseWriter
+	status int
+	size   int
+}
+
+func LoggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		logger := log.Ctx(r.Context())
+		start := time.Now()
+
+		traceID := r.Header.Get("X-Request-ID")
+		if traceID == "" {
+			traceID = uuid.New().String()
+		}
+
+		ctx := context.WithValue(r.Context(), "trace_id", traceID)
+		r = r.WithContext(ctx)
+
+		w.Header().Set("X-Request-ID", traceID)
+
+		rw := &responseWriter{ResponseWriter: w, status: http.StatusOK}
+
+		next.ServeHTTP(rw, r)
+
+		duration := time.Since(start)
+
+		logger.Info().
+			Str("trace_id", traceID).
+			Str("method", r.Method).
+			Str("path", r.URL.Path).
+			Int("status", rw.status).
+			Dur("duration", duration).
+			Str("remote_addr", r.RemoteAddr).
+			Msg("HTTP request")
+	})
+}
