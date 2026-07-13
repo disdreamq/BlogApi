@@ -9,7 +9,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// Добавить rate limmiter и почти приехал
 func NewRouter(
 	rdb *redis.Client,
 	userCtrl *UserController,

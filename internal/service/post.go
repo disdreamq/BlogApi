@@ -12,7 +12,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// TODO F7. Получение списка постов автора по username с пагинацией (limit/offset), сортировка по created_at DESC (публично).
 type PostService struct {
 	postRepo port.PostRepository
 	cache    port.Cache
