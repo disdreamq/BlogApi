@@ -16,7 +16,7 @@ func NewPost(userID int64, title, content string) (*Post, error) {
 		return nil, ErrInvalidTitle
 
 	}
-	if content == "" || len(content) > 1000 || len(content) == 0 {
+	if content == "" || len(content) > 1000 {
 		return nil, ErrInvalidContent
 	}
 	return &Post{
