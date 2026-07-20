@@ -67,14 +67,12 @@ func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case service.ErrUnexpected:
-			println(err)
 			http.Error(w, `{"error": "failed to create user"}`, http.StatusInternalServerError)
 			return
 		case service.ErrUserAlreadyExists:
 			http.Error(w, `{"error": "user with this email already exists"}`, http.StatusConflict)
 			return
 		default:
-			print(err)
 			http.Error(w, `{"error": "failed to create user"}`, http.StatusBadRequest)
 			return
 		}

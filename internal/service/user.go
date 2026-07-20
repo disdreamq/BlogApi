@@ -38,8 +38,9 @@ func (u *UserService) Create(ctx context.Context, username, email, password stri
 
 	}
 	logger := log.Ctx(ctx)
+	trace_id, _ := ctx.Value("trace_id").(string)
 	logger.Info().
-		Str("trace_id", ctx.Value("trace_id").(string)).
+		Str("trace_id", trace_id).
 		Int64("userId", user.ID).
 		Str("username", username).
 		Str("email", email).
@@ -58,8 +59,9 @@ func (u *UserService) GetByID(ctx context.Context, userID int64) (*domain.User, 
 		}
 	}
 	logger := log.Ctx(ctx)
+	trace_id, _ := ctx.Value("trace_id").(string)
 	logger.Debug().
-		Str("trace_id", ctx.Value("trace_id").(string)).
+		Str("trace_id", trace_id).
 		Int64("userId", userID).
 		Msg("Read user.")
 	return user, nil
@@ -76,8 +78,9 @@ func (u *UserService) GetByEmail(ctx context.Context, email string) (*domain.Use
 		}
 	}
 	logger := log.Ctx(ctx)
+	trace_id, _ := ctx.Value("trace_id").(string)
 	logger.Debug().
-		Str("trace_id", ctx.Value("trace_id").(string)).
+		Str("trace_id", trace_id).
 		Str("title", email).
 		Msg("Read user.")
 	return user, nil
@@ -107,8 +110,9 @@ func (u *UserService) Update(ctx context.Context, currUserID, userID int64, user
 		}
 	}
 	logger := log.Ctx(ctx)
+	trace_id, _ := ctx.Value("trace_id").(string)
 	logger.Debug().
-		Str("trace_id", ctx.Value("trace_id").(string)).
+		Str("trace_id", trace_id).
 		Int64("user_id", userID).
 		Str("username", username).
 		Str("email", email).
@@ -132,8 +136,9 @@ func (u *UserService) Delete(ctx context.Context, currUserID int64, userID int64
 		}
 	}
 	logger := log.Ctx(ctx)
+	trace_id, _ := ctx.Value("trace_id").(string)
 	logger.Debug().
-		Str("trace_id", ctx.Value("trace_id").(string)).
+		Str("trace_id", trace_id).
 		Int64("user_id", userID).
 		Msg("Delete user.")
 	return nil
@@ -144,16 +149,17 @@ func (u *UserService) validateCurrUser(ctx context.Context, currUserID, userID i
 		return false
 	}
 	logger := log.Ctx(ctx)
+	trace_id, _ := ctx.Value("trace_id").(string)
 	if user.ID != currUserID {
 		logger.Debug().
-			Str("trace_id", ctx.Value("trace_id").(string)).
+			Str("trace_id", trace_id).
 			Int64("current_user_id", currUserID).
 			Int64("user_id", userID).
 			Msg("Validation failed for user.")
 		return false
 	}
 	logger.Debug().
-		Str("trace_id", ctx.Value("trace_id").(string)).
+		Str("trace_id", trace_id).
 		Int64("current_user_id", currUserID).
 		Int64("user_id", userID).
 		Msg("Validate user.")

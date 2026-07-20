@@ -40,8 +40,9 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*domai
 		return nil, ErrCanNotLogin
 	}
 	payload, _ := s.tokenProvider.ValidateToken(token)
+	trace_id, _ := ctx.Value("trace_id").(string)
 	logger.Info().
-		Str("trace_id", ctx.Value("trace_id").(string)).
+		Str("trace_id", trace_id).
 		Int64("user_id", user.ID).
 		Msg("User loggined")
 	return domain.NewAuthResult(token, payload), nil

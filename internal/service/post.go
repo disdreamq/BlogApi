@@ -31,8 +31,9 @@ func (p *PostService) Create(ctx context.Context, userID int64, title, content s
 		return nil, ErrLinkedUserNotFound
 	}
 	logger := log.Ctx(ctx)
+	trace_id, _ := ctx.Value("trace_id").(string)
 	logger.Info().
-		Str("trace_id", ctx.Value("trace_id").(string)).
+		Str("trace_id", trace_id).
 		Int64("user_id", userID).
 		Str("title", title).
 		Msg("Created post")
@@ -67,8 +68,9 @@ func (p *PostService) GetByID(ctx context.Context, postID int64) (*domain.Post, 
 		return nil, ErrCacheUnmarshal
 	}
 	logger := log.Ctx(ctx)
+	trace_id, _ := ctx.Value("trace_id").(string)
 	logger.Debug().
-		Str("trace_id", ctx.Value("trace_id").(string)).
+		Str("trace_id", trace_id).
 		Int64("post_id", postID).
 		Msg("Read post")
 	return &post, nil
@@ -102,8 +104,9 @@ func (p *PostService) GetByTitle(ctx context.Context, title string) (*domain.Pos
 		return nil, ErrCacheUnmarshal
 	}
 	logger := log.Ctx(ctx)
+	trace_id, _ := ctx.Value("trace_id").(string)
 	logger.Debug().
-		Str("trace_id", ctx.Value("trace_id").(string)).
+		Str("trace_id", trace_id).
 		Str("title", title).
 		Msg("Read post")
 	return &post, nil
@@ -128,8 +131,9 @@ func (p *PostService) Update(ctx context.Context, currUserID, postID int64, titl
 		}
 	}
 	logger := log.Ctx(ctx)
+	trace_id, _ := ctx.Value("trace_id").(string)
 	logger.Debug().
-		Str("trace_id", ctx.Value("trace_id").(string)).
+		Str("trace_id", trace_id).
 		Int64("post_id", postID).
 		Msg("Updated post")
 	p.cache.Del(ctx, "post_"+strconv.FormatInt(postID, 10))
@@ -152,8 +156,9 @@ func (p *PostService) Delete(ctx context.Context, currUserID int64, postID int64
 		}
 	}
 	logger := log.Ctx(ctx)
+	trace_id, _ := ctx.Value("trace_id").(string)
 	logger.Debug().
-		Str("trace_id", ctx.Value("trace_id").(string)).
+		Str("trace_id", trace_id).
 		Int64("post_id", postID).
 		Msg("Deleted post")
 	p.cache.Del(ctx, strconv.FormatInt(postID, 10))
@@ -165,16 +170,17 @@ func (p *PostService) validateCurrUser(ctx context.Context, currUserID int64, po
 		return false
 	}
 	logger := log.Ctx(ctx)
+	trace_id, _ := ctx.Value("trace_id").(string)
 	if post.UserID != currUserID {
 		logger.Debug().
-			Str("trace_id", ctx.Value("trace_id").(string)).
+			Str("trace_id", trace_id).
 			Int64("curr_user_id", currUserID).
 			Int64("user_id", post.UserID).
 			Msg("Validation failed for user.")
 		return false
 	}
 	logger.Debug().
-		Str("trace_id", ctx.Value("trace_id").(string)).
+		Str("trace_id", trace_id).
 		Int64("curr_user_id", currUserID).
 		Int64("user_id", post.UserID).
 		Msg("Validated user.")
