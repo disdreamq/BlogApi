@@ -40,9 +40,9 @@ func (p *PostService) Create(ctx context.Context, userID int64, title, content s
 }
 
 func (p *PostService) GetByID(ctx context.Context, postID int64) (*domain.Post, error) {
-	cachedPost, ok := p.cache.Get(ctx, "postTitle_"+strconv.FormatInt(postID, 10))
+	cachedPost, ok := p.cache.Get(ctx, "post_"+strconv.FormatInt(postID, 10))
 	if !ok {
-		post, err := p.postRepo.GetByTitle(ctx, strconv.FormatInt(postID, 10))
+		post, err := p.postRepo.GetByID(ctx, postID)
 		if err != nil {
 			switch err {
 			case sql.ErrNoRows:
@@ -56,7 +56,7 @@ func (p *PostService) GetByID(ctx context.Context, postID int64) (*domain.Post, 
 			return nil, err
 		}
 
-		if ok := p.cache.Set(ctx, "postTitle_"+strconv.FormatInt(postID, 10), data, 10*time.Minute); !ok {
+		if ok := p.cache.Set(ctx, "post_"+strconv.FormatInt(postID, 10), data, 10*time.Minute); !ok {
 			return post, nil
 		}
 	}
@@ -75,7 +75,7 @@ func (p *PostService) GetByID(ctx context.Context, postID int64) (*domain.Post, 
 }
 
 func (p *PostService) GetByTitle(ctx context.Context, title string) (*domain.Post, error) {
-	cachedPost, ok := p.cache.Get(ctx, "postTitle_"+title)
+	cachedPost, ok := p.cache.Get(ctx, "post_"+title)
 	if !ok {
 		post, err := p.postRepo.GetByTitle(ctx, title)
 		if err != nil {
@@ -91,7 +91,7 @@ func (p *PostService) GetByTitle(ctx context.Context, title string) (*domain.Pos
 			return nil, err
 		}
 
-		if ok := p.cache.Set(ctx, "postTitle_"+title, data, 10*time.Minute); !ok {
+		if ok := p.cache.Set(ctx, "post_"+title, data, 10*time.Minute); !ok {
 			return post, nil
 		}
 	}
@@ -132,7 +132,8 @@ func (p *PostService) Update(ctx context.Context, currUserID, postID int64, titl
 		Str("trace_id", ctx.Value("trace_id").(string)).
 		Int64("post_id", postID).
 		Msg("Updated post")
-	p.cache.Del(ctx, strconv.FormatInt(postID, 10))
+	p.cache.Del(ctx, "post_"+strconv.FormatInt(postID, 10))
+	p.cache.Del(ctx, "post_"+title)
 	return nil
 
 }

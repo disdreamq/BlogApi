@@ -34,7 +34,7 @@ type Config struct {
 	Expiry    int    `envconfig:"EXPIRY" default:"10"`
 
 	// PRM
-	PublicRPM    int `envconfig:"PUBLICK_RPM" default:"5"`
+	PublicRPM    int `envconfig:"PUBLIC_RPM" default:"5"`
 	ProtectedRPM int `envconfig:"PROTECTED_RPM" default:"10"`
 
 	// CORS

@@ -138,8 +138,8 @@ func (u *UserService) Delete(ctx context.Context, currUserID int64, userID int64
 		Msg("Delete user.")
 	return nil
 }
-func (p *UserService) validateCurrUser(ctx context.Context, currUserID, userID int64) bool {
-	user, err := p.GetByID(ctx, userID)
+func (u *UserService) validateCurrUser(ctx context.Context, currUserID, userID int64) bool {
+	user, err := u.GetByID(ctx, userID)
 	if err != nil {
 		return false
 	}
