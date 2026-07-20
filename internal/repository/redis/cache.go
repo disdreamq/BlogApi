@@ -31,6 +31,7 @@ func (r *RedisCache) Get(ctx context.Context, key string) (string, bool) {
 			logger.Err(err).
 				Str("trace_id", ctx.Value("trace_id").(string)).
 				Str("key", key)
+			return val, false
 		}
 	}
 
