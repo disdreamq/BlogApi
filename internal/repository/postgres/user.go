@@ -105,7 +105,7 @@ func (r *UserRepository) Update(ctx context.Context, user *domain.User) error {
 	defer cancel()
 
 	query := `
-		UPDATE users SET username = $1, email = $2, password = $3
+		UPDATE users SET username = $1, email = $2, password_hash = $3
 		WHERE id = $4
 	`
 	result, err := tx.ExecContext(txCtx, query, user.Username, user.Email, user.PasswordHash, user.ID)
