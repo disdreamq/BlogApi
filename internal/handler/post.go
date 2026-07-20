@@ -16,6 +16,7 @@ type PostController struct {
 }
 
 type CreatePostRequest struct {
+	ID      int64  `json:"id"`
 	UserID  int64  `json:"user_id"`
 	Title   string `json:"title"`
 	Content string `json:"content"`
@@ -68,9 +69,9 @@ func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, `{"error": "linked user with this id doesnt exists."}`, http.StatusConflict)
 			return
 		case domain.ErrInvalidTitle:
-			http.Error(w, `"error":"title must contain at least 1 character"`, http.StatusBadRequest)
-		case domain.ErrInvalidTitle:
-			http.Error(w, `"error":"content must contain at least 1 character"`, http.StatusBadRequest)
+			http.Error(w, `"error": "title must contain at least 1 character"`, http.StatusBadRequest)
+		case domain.ErrInvalidContent:
+			http.Error(w, `"error": "content must contain at least 1 character"`, http.StatusBadRequest)
 		default:
 			http.Error(w, `{"error": "failed to create post"}`, http.StatusBadRequest)
 			return
@@ -175,13 +176,12 @@ func (c *PostController) Update(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error": "invalid JSON"}`, http.StatusBadRequest)
 		return
 	}
-	postReq.UserID = r.Context().Value("userID").(int64)
 	currUserID, err := strconv.ParseInt(r.Context().Value("userID").(string), 10, 64)
 	if err != nil {
 		http.Error(w, `{"error": "invalid user ID"}`, http.StatusBadRequest)
 		return
 	}
-	err = c.postService.Update(r.Context(), currUserID, postReq.UserID, postReq.Title, postReq.Content)
+	err = c.postService.Update(r.Context(), currUserID, postReq.ID, postReq.Title, postReq.Content)
 	if err != nil {
 		switch err {
 		case service.ErrUserNotFound:
