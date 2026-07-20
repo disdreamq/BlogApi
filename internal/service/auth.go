@@ -9,18 +9,18 @@ import (
 )
 
 type AuthService struct {
-	userService   port.UserService
+	userRepo      port.UserRepository
 	hasher        port.Hasher
 	tokenProvider port.TokenProvider
 }
 
 func NewAuthService(
-	userService port.UserService,
+	userRepo port.UserRepository,
 	hasher port.Hasher,
 	tokenProvider port.TokenProvider,
 ) *AuthService {
 	return &AuthService{
-		userService:   userService,
+		userRepo:      userRepo,
 		hasher:        hasher,
 		tokenProvider: tokenProvider,
 	}
@@ -28,7 +28,7 @@ func NewAuthService(
 
 func (s *AuthService) Login(ctx context.Context, email, password string) (*domain.AuthResult, error) {
 	logger := log.Ctx(ctx)
-	user, err := s.userService.GetByEmail(ctx, email)
+	user, err := s.userRepo.GetByEmail(ctx, email)
 	if err != nil {
 		return nil, err
 	}

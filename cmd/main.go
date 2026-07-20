@@ -126,7 +126,7 @@ func main() {
 
 	// prepare auth controller
 	prov := jwt.NewProvider(cfg.SecretKey, time.Duration(cfg.Expiry))
-	authSVC := service.NewAuthService(userSVC, hasher, prov)
+	authSVC := service.NewAuthService(userRepo, hasher, prov)
 	authCtrl := handler.NewAuthController(authSVC)
 
 	r := handler.NewRouter(rdb, userCtrl, postCtrl, authCtrl, cfg.SecretKey, time.Duration(cfg.Expiry), cfg.PublicRPM, cfg.ProtectedRPM)
