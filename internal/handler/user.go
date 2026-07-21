@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -141,7 +142,12 @@ func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 func (c *UserController) GetByEmail(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	email := chi.URLParam(r, "email")
-	user, err := c.userService.GetByEmail(r.Context(), email)
+	decodedEmail, err := url.QueryUnescape(email)
+	if err != nil {
+		http.Error(w, `{"error": "invalid email encoding"}`, http.StatusBadRequest)
+		return
+	}
+	user, err := c.userService.GetByEmail(r.Context(), decodedEmail)
 	if err != nil {
 		switch err {
 		case service.ErrUserNotFound:

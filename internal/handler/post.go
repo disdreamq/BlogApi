@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/disdreamq/BlogApi/internal/domain"
@@ -138,11 +139,16 @@ func (c *PostController) GetByID(w http.ResponseWriter, r *http.Request) {
 func (c *PostController) GetByTitle(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	title := chi.URLParam(r, "title")
+	decodedTitle, err := url.QueryUnescape(title)
+	if err != nil {
+		http.Error(w, `{"error": "invalid email encoding"}`, http.StatusBadRequest)
+		return
+	}
 	if title == "" {
 		http.Error(w, `{"error": "invalid post title"}`, http.StatusBadRequest)
 		return
 	}
-	post, err := c.postService.GetByTitle(r.Context(), title)
+	post, err := c.postService.GetByTitle(r.Context(), decodedTitle)
 	if err != nil {
 		switch err {
 		case service.ErrPostNotFound:
