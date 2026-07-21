@@ -23,7 +23,7 @@ var (
 	ErrLinkedUserNotFound = errors.New("Linked user not found.")
 
 	// Cache
-	ErrCacheUnmarshal = errors.New("Can not unmarshal data from cache")
+	ErrCacheUnmarshal = errors.New("Can not unmarshal data from cache.")
 
 	// Unexpected
 	ErrUnexpected = errors.New("Unexpected error.")

@@ -57,9 +57,8 @@ func (p *PostService) GetByID(ctx context.Context, postID int64) (*domain.Post, 
 			return nil, err
 		}
 
-		if ok := p.cache.Set(ctx, "post_"+strconv.FormatInt(postID, 10), data, 10*time.Minute); !ok {
-			return post, nil
-		}
+		p.cache.Set(ctx, "post_"+strconv.FormatInt(postID, 10), data, 10*time.Minute)
+		return post, nil
 	}
 
 	var post domain.Post
@@ -93,9 +92,9 @@ func (p *PostService) GetByTitle(ctx context.Context, title string) (*domain.Pos
 			return nil, err
 		}
 
-		if ok := p.cache.Set(ctx, "post_"+title, data, 10*time.Minute); !ok {
-			return post, nil
-		}
+		p.cache.Set(ctx, "post_"+title, data, 10*time.Minute)
+		return post, nil
+
 	}
 
 	var post domain.Post
@@ -146,7 +145,7 @@ func (p *PostService) Delete(ctx context.Context, currUserID int64, postID int64
 	if ok := p.validateCurrUser(ctx, currUserID, postID); !ok {
 		return ErrMethodNotAllowed
 	}
-	err := p.postRepo.Delete(ctx, postID)
+	title, err := p.postRepo.Delete(ctx, postID)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -161,7 +160,8 @@ func (p *PostService) Delete(ctx context.Context, currUserID int64, postID int64
 		Str("trace_id", trace_id).
 		Int64("post_id", postID).
 		Msg("Deleted post")
-	p.cache.Del(ctx, strconv.FormatInt(postID, 10))
+	p.cache.Del(ctx, "post_"+strconv.FormatInt(postID, 10))
+	p.cache.Del(ctx, "post_"+title)
 	return nil
 }
 func (p *PostService) validateCurrUser(ctx context.Context, currUserID int64, postID int64) bool {
