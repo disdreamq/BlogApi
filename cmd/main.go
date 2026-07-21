@@ -129,14 +129,12 @@ func main() {
 	authSVC := service.NewAuthService(userRepo, hasher, prov)
 	authCtrl := handler.NewAuthController(authSVC)
 
-	r := handler.NewRouter(rdb, userCtrl, postCtrl, authCtrl, cfg.SecretKey, time.Duration(cfg.Expiry), cfg.PublicRPM, cfg.ProtectedRPM)
+	r := handler.NewRouter(rdb, userCtrl, postCtrl, authCtrl, cfg.SecretKey, time.Duration(cfg.Expiry), cfg.PublicRPM, cfg.ProtectedRPM, logger)
 
 	// Swagger
 	r.Get("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL("http://localhost:8080/swagger/doc.json"), // явно указываем URL документации
+		httpSwagger.URL("http://localhost:8080/swagger/doc.json"),
 	))
-
-	// Print startup banner
 
 	srv := &http.Server{
 		Addr:    ":8080",
