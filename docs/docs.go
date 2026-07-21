@@ -35,39 +35,39 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.AuthRequest"
+                            "$ref": "#/definitions/handler.AuthRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Created",
+                    "200": {
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.AuthResponse"
+                            "$ref": "#/definitions/handler.AuthResponse"
                         }
                     },
                     "400": {
                         "description": "invalid JSON",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "wrong password / can not login",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "user not found",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "internal server error",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     }
                 }
@@ -93,20 +93,12 @@ const docTemplate = `{
                 "summary": "Create a new post",
                 "parameters": [
                     {
-                        "type": "string",
-                        "format": "bearer",
-                        "description": "Bearer token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
                         "description": "Post data",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.CreatePostRequest"
+                            "$ref": "#/definitions/handler.CreatePostRequest"
                         }
                     }
                 ],
@@ -114,43 +106,38 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.PostResponse"
+                            "$ref": "#/definitions/handler.PostResponse"
                         }
                     },
                     "400": {
                         "description": "invalid JSON / invalid title or content",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "linked user with this id doesnt exists",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "failed to create post",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/posts/{postID}": {
+        "/posts/id/{postID}": {
             "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
                 "description": "Returns a single post by its ID (requires authentication)",
                 "consumes": [
                     "application/json"
@@ -164,14 +151,6 @@ const docTemplate = `{
                 "summary": "Get post by ID",
                 "parameters": [
                     {
-                        "type": "string",
-                        "format": "bearer",
-                        "description": "Bearer token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
                         "type": "integer",
                         "description": "Post ID",
                         "name": "postID",
@@ -183,35 +162,87 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.PostResponse"
+                            "$ref": "#/definitions/handler.PostResponse"
                         }
                     },
                     "400": {
                         "description": "invalid post ID",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "post not found",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "failed to get post",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     }
                 }
-            },
+            }
+        },
+        "/posts/title/{title}": {
+            "get": {
+                "description": "Returns a single post by its title (requires authentication)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "posts"
+                ],
+                "summary": "Get post by title",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Post Title",
+                        "name": "title",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.PostResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid post title / failed to get post",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "post not found",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/posts/{postID}": {
             "put": {
                 "security": [
                     {
@@ -231,14 +262,6 @@ const docTemplate = `{
                 "summary": "Update a post",
                 "parameters": [
                     {
-                        "type": "string",
-                        "format": "bearer",
-                        "description": "Bearer token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
                         "type": "integer",
                         "description": "Post ID",
                         "name": "postID",
@@ -251,7 +274,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.CreatePostRequest"
+                            "$ref": "#/definitions/handler.UpdatePostRequest"
                         }
                     }
                 ],
@@ -265,25 +288,25 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid post ID / invalid JSON / invalid user ID",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "user not found",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "failed to get post",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     }
                 }
@@ -307,14 +330,6 @@ const docTemplate = `{
                 "summary": "Delete a post",
                 "parameters": [
                     {
-                        "type": "string",
-                        "format": "bearer",
-                        "description": "Bearer token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
                         "type": "integer",
                         "description": "Post ID",
                         "name": "postID",
@@ -332,88 +347,25 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid post ID / invalid user ID",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "post not found",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "failed to get post",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/posts/{title}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns a single post by its title (requires authentication)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "posts"
-                ],
-                "summary": "Get post by title",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "format": "bearer",
-                        "description": "Bearer token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Post Title",
-                        "name": "title",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handler.PostResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "invalid post title / failed to get post",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "post not found",
-                        "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     }
                 }
@@ -439,7 +391,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.CreateUserRequest"
+                            "$ref": "#/definitions/handler.CreateUserRequest"
                         }
                     }
                 ],
@@ -447,37 +399,37 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.UserResponse"
+                            "$ref": "#/definitions/handler.UserResponse"
                         }
                     },
                     "400": {
                         "description": "invalid JSON",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "user not found",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "user with this email already exists",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "failed to create user",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/users/{email}": {
+        "/users/email/{email}": {
             "get": {
                 "security": [
                     {
@@ -498,14 +450,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "format": "bearer",
-                        "description": "Bearer token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
                         "description": "User Email",
                         "name": "email",
                         "in": "path",
@@ -516,31 +460,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.UserResponse"
+                            "$ref": "#/definitions/handler.UserResponse"
                         }
                     },
                     "400": {
                         "description": "failed to get user",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "user not found",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/users/{userID}": {
+        "/users/id/{userID}": {
             "get": {
                 "security": [
                     {
@@ -560,14 +504,6 @@ const docTemplate = `{
                 "summary": "Get user by ID",
                 "parameters": [
                     {
-                        "type": "string",
-                        "format": "bearer",
-                        "description": "Bearer token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
                         "type": "integer",
                         "description": "User ID",
                         "name": "userID",
@@ -579,35 +515,37 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.UserResponse"
+                            "$ref": "#/definitions/handler.UserResponse"
                         }
                     },
                     "400": {
                         "description": "invalid user ID",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "user not found",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "failed to get user",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     }
                 }
-            },
+            }
+        },
+        "/users/{userID}": {
             "put": {
                 "security": [
                     {
@@ -627,14 +565,6 @@ const docTemplate = `{
                 "summary": "Update a user",
                 "parameters": [
                     {
-                        "type": "string",
-                        "format": "bearer",
-                        "description": "Bearer token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
                         "type": "integer",
                         "description": "User ID",
                         "name": "userID",
@@ -647,7 +577,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.CreateUserRequest"
+                            "$ref": "#/definitions/handler.UpdateUserRequest"
                         }
                     }
                 ],
@@ -661,25 +591,25 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid user ID / invalid JSON",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "user not found",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "failed to get user",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     }
                 }
@@ -703,14 +633,6 @@ const docTemplate = `{
                 "summary": "Delete a user",
                 "parameters": [
                     {
-                        "type": "string",
-                        "format": "bearer",
-                        "description": "Bearer token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
                         "type": "integer",
                         "description": "User ID",
                         "name": "userID",
@@ -728,25 +650,25 @@ const docTemplate = `{
                     "400": {
                         "description": "invalid user ID",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "user not found",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "failed to get user",
                         "schema": {
-                            "$ref": "#/definitions/internal_handler.ErrorResponse"
+                            "$ref": "#/definitions/handler.ErrorResponse"
                         }
                     }
                 }
@@ -754,7 +676,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "internal_handler.AuthRequest": {
+        "handler.AuthRequest": {
             "type": "object",
             "properties": {
                 "email": {
@@ -767,7 +689,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_handler.AuthResponse": {
+        "handler.AuthResponse": {
             "type": "object",
             "properties": {
                 "token": {
@@ -776,7 +698,7 @@ const docTemplate = `{
                 "token_payload": {}
             }
         },
-        "internal_handler.CreatePostRequest": {
+        "handler.CreatePostRequest": {
             "type": "object",
             "properties": {
                 "content": {
@@ -784,13 +706,10 @@ const docTemplate = `{
                 },
                 "title": {
                     "type": "string"
-                },
-                "user_id": {
-                    "type": "integer"
                 }
             }
         },
-        "internal_handler.CreateUserRequest": {
+        "handler.CreateUserRequest": {
             "type": "object",
             "properties": {
                 "email": {
@@ -807,7 +726,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_handler.ErrorResponse": {
+        "handler.ErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
@@ -815,7 +734,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_handler.PostResponse": {
+        "handler.PostResponse": {
             "type": "object",
             "properties": {
                 "content": {
@@ -833,7 +752,39 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_handler.UserResponse": {
+        "handler.UpdatePostRequest": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.UpdateUserRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "password123"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.UserResponse": {
             "type": "object",
             "properties": {
                 "created_at": {

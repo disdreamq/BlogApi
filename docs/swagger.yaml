@@ -1,6 +1,6 @@
 basePath: /
 definitions:
-  internal_handler.AuthRequest:
+  handler.AuthRequest:
     properties:
       email:
         example: user@example.com
@@ -9,22 +9,20 @@ definitions:
         example: password123
         type: string
     type: object
-  internal_handler.AuthResponse:
+  handler.AuthResponse:
     properties:
       token:
         type: string
       token_payload: {}
     type: object
-  internal_handler.CreatePostRequest:
+  handler.CreatePostRequest:
     properties:
       content:
         type: string
       title:
         type: string
-      user_id:
-        type: integer
     type: object
-  internal_handler.CreateUserRequest:
+  handler.CreateUserRequest:
     properties:
       email:
         example: user@example.com
@@ -36,12 +34,12 @@ definitions:
         example: johndoe
         type: string
     type: object
-  internal_handler.ErrorResponse:
+  handler.ErrorResponse:
     properties:
       error:
         type: string
     type: object
-  internal_handler.PostResponse:
+  handler.PostResponse:
     properties:
       content:
         type: string
@@ -53,7 +51,28 @@ definitions:
       user_id:
         type: integer
     type: object
-  internal_handler.UserResponse:
+  handler.UpdatePostRequest:
+    properties:
+      content:
+        type: string
+      id:
+        type: integer
+      title:
+        type: string
+    type: object
+  handler.UpdateUserRequest:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      password:
+        example: password123
+        type: string
+      username:
+        type: string
+    type: object
+  handler.UserResponse:
     properties:
       created_at:
         type: string
@@ -82,30 +101,30 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_handler.AuthRequest'
+          $ref: '#/definitions/handler.AuthRequest'
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
           schema:
-            $ref: '#/definitions/internal_handler.AuthResponse'
+            $ref: '#/definitions/handler.AuthResponse'
         "400":
           description: invalid JSON
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
         "401":
           description: wrong password / can not login
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
         "404":
           description: user not found
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
         "500":
           description: internal server error
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
       summary: Login to the blog
       tags:
       - auth
@@ -115,41 +134,35 @@ paths:
       - application/json
       description: Creates a new post for the authenticated user (requires authentication)
       parameters:
-      - description: Bearer token
-        format: bearer
-        in: header
-        name: Authorization
-        required: true
-        type: string
       - description: Post data
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_handler.CreatePostRequest'
+          $ref: '#/definitions/handler.CreatePostRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/internal_handler.PostResponse'
+            $ref: '#/definitions/handler.PostResponse'
         "400":
           description: invalid JSON / invalid title or content
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
         "401":
           description: unauthorized
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
         "409":
           description: linked user with this id doesnt exists
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
         "500":
           description: failed to create post
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Create a new post
@@ -161,12 +174,6 @@ paths:
       - application/json
       description: Removes a post by ID (requires authentication)
       parameters:
-      - description: Bearer token
-        format: bearer
-        in: header
-        name: Authorization
-        required: true
-        type: string
       - description: Post ID
         in: path
         name: postID
@@ -182,66 +189,22 @@ paths:
         "400":
           description: invalid post ID / invalid user ID
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
         "401":
           description: unauthorized
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
         "404":
           description: post not found
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
         "500":
           description: failed to get post
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Delete a post
-      tags:
-      - posts
-    get:
-      consumes:
-      - application/json
-      description: Returns a single post by its ID (requires authentication)
-      parameters:
-      - description: Bearer token
-        format: bearer
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: Post ID
-        in: path
-        name: postID
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_handler.PostResponse'
-        "400":
-          description: invalid post ID
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
-          description: unauthorized
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
-          description: post not found
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
-          description: failed to get post
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Get post by ID
       tags:
       - posts
     put:
@@ -249,12 +212,6 @@ paths:
       - application/json
       description: Updates an existing post by ID (requires authentication)
       parameters:
-      - description: Bearer token
-        format: bearer
-        in: header
-        name: Authorization
-        required: true
-        type: string
       - description: Post ID
         in: path
         name: postID
@@ -265,7 +222,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_handler.CreatePostRequest'
+          $ref: '#/definitions/handler.UpdatePostRequest'
       produces:
       - application/json
       responses:
@@ -276,36 +233,67 @@ paths:
         "400":
           description: invalid post ID / invalid JSON / invalid user ID
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
         "401":
           description: unauthorized
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
         "404":
           description: user not found
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
         "500":
           description: failed to get post
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update a post
       tags:
       - posts
-  /posts/{title}:
+  /posts/id/{postID}:
+    get:
+      consumes:
+      - application/json
+      description: Returns a single post by its ID (requires authentication)
+      parameters:
+      - description: Post ID
+        in: path
+        name: postID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.PostResponse'
+        "400":
+          description: invalid post ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: post not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: failed to get post
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Get post by ID
+      tags:
+      - posts
+  /posts/title/{title}:
     get:
       consumes:
       - application/json
       description: Returns a single post by its title (requires authentication)
       parameters:
-      - description: Bearer token
-        format: bearer
-        in: header
-        name: Authorization
-        required: true
-        type: string
       - description: Post Title
         in: path
         name: title
@@ -317,21 +305,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_handler.PostResponse'
+            $ref: '#/definitions/handler.PostResponse'
         "400":
           description: invalid post title / failed to get post
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
         "401":
           description: unauthorized
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
         "404":
           description: post not found
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-      security:
-      - BearerAuth: []
+            $ref: '#/definitions/handler.ErrorResponse'
       summary: Get post by title
       tags:
       - posts
@@ -346,72 +332,31 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_handler.CreateUserRequest'
+          $ref: '#/definitions/handler.CreateUserRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/internal_handler.UserResponse'
+            $ref: '#/definitions/handler.UserResponse'
         "400":
           description: invalid JSON
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
         "404":
           description: user not found
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
         "409":
           description: user with this email already exists
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
         "500":
           description: failed to create user
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
       summary: Register a new user
-      tags:
-      - users
-  /users/{email}:
-    get:
-      consumes:
-      - application/json
-      description: Returns a single user by their email (requires authentication)
-      parameters:
-      - description: Bearer token
-        format: bearer
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: User Email
-        in: path
-        name: email
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_handler.UserResponse'
-        "400":
-          description: failed to get user
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
-          description: unauthorized
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
-          description: user not found
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Get user by email
       tags:
       - users
   /users/{userID}:
@@ -420,12 +365,6 @@ paths:
       - application/json
       description: Removes a user by ID (requires authentication)
       parameters:
-      - description: Bearer token
-        format: bearer
-        in: header
-        name: Authorization
-        required: true
-        type: string
       - description: User ID
         in: path
         name: userID
@@ -441,66 +380,22 @@ paths:
         "400":
           description: invalid user ID
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
         "401":
           description: unauthorized
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
         "404":
           description: user not found
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
         "500":
           description: failed to get user
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Delete a user
-      tags:
-      - users
-    get:
-      consumes:
-      - application/json
-      description: Returns a single user by their ID (requires authentication)
-      parameters:
-      - description: Bearer token
-        format: bearer
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: User ID
-        in: path
-        name: userID
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_handler.UserResponse'
-        "400":
-          description: invalid user ID
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "401":
-          description: unauthorized
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "404":
-          description: user not found
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-        "500":
-          description: failed to get user
-          schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Get user by ID
       tags:
       - users
     put:
@@ -508,12 +403,6 @@ paths:
       - application/json
       description: Updates an existing user by ID (requires authentication)
       parameters:
-      - description: Bearer token
-        format: bearer
-        in: header
-        name: Authorization
-        required: true
-        type: string
       - description: User ID
         in: path
         name: userID
@@ -524,7 +413,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_handler.CreateUserRequest'
+          $ref: '#/definitions/handler.UpdateUserRequest'
       produces:
       - application/json
       responses:
@@ -535,22 +424,96 @@ paths:
         "400":
           description: invalid user ID / invalid JSON
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
         "401":
           description: unauthorized
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
         "404":
           description: user not found
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
         "500":
           description: failed to get user
           schema:
-            $ref: '#/definitions/internal_handler.ErrorResponse'
+            $ref: '#/definitions/handler.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Update a user
+      tags:
+      - users
+  /users/email/{email}:
+    get:
+      consumes:
+      - application/json
+      description: Returns a single user by their email (requires authentication)
+      parameters:
+      - description: User Email
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.UserResponse'
+        "400":
+          description: failed to get user
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: user not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user by email
+      tags:
+      - users
+  /users/id/{userID}:
+    get:
+      consumes:
+      - application/json
+      description: Returns a single user by their ID (requires authentication)
+      parameters:
+      - description: User ID
+        in: path
+        name: userID
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.UserResponse'
+        "400":
+          description: invalid user ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: user not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: failed to get user
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user by ID
       tags:
       - users
 schemes:
