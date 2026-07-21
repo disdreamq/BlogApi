@@ -46,7 +46,7 @@ func (p *Provider) ValidateToken(tokenString string) (*domain.TokenPayload, erro
 		return nil, ErrInvalidToken
 	}
 	claims, ok := token.Claims.(*domain.Claims)
-	if ok || !token.Valid {
+	if !ok || !token.Valid {
 		return nil, ErrInvalidToken
 	}
 	return domain.NewPayload(claims, time.Now().Add(p.expiry)), nil
