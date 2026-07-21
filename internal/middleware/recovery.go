@@ -12,7 +12,6 @@ func RecoveryMiddleware(next http.Handler) http.Handler {
 		defer func() {
 			if err := recover(); err != nil {
 				log.Error().
-					Err(err.(error)).
 					Interface("panic", err).
 					Str("stack", string(debug.Stack())).
 					Msg("panic recovered")
