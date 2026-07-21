@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/disdreamq/BlogApi/internal/domain"
 	"github.com/disdreamq/BlogApi/internal/port"
 	"github.com/disdreamq/BlogApi/internal/service"
 )
@@ -23,6 +24,10 @@ type AuthResponse struct {
 	TokenPayload interface{} `json:"token_payload"`
 }
 
+func NewAuthResponse(res *domain.AuthResult) *AuthResponse {
+	return &AuthResponse{Token: res.Token, TokenPayload: res.TokenPayload}
+}
+
 // ErrorResponse represents a generic error response
 type ErrorResponse struct {
 	Error string `json:"error"`
@@ -39,7 +44,7 @@ func NewAuthController(authService port.AuthService) *AuthController {
 // @Accept       json
 // @Produce      json
 // @Param        request  body      AuthRequest  true  "Login credentials"
-// @Success      201      {object}  AuthResponse
+// @Success      200      {object}  AuthResponse
 // @Failure      400      {object}  ErrorResponse  "invalid JSON"
 // @Failure      401      {object}  ErrorResponse  "wrong password / can not login"
 // @Failure      404      {object}  ErrorResponse  "user not found"
@@ -70,6 +75,6 @@ func (a *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(token)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(NewAuthResponse(token))
 }
