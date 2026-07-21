@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/disdreamq/BlogApi/internal/domain"
@@ -37,7 +38,6 @@ func NewPostRepository(db *sqlx.DB) *PostRepository {
 }
 
 func (r *PostRepository) Create(ctx context.Context, post *domain.Post) (*domain.Post, error) {
-
 	tx, err := r.db.Beginx()
 	if err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func (r *PostRepository) Create(ctx context.Context, post *domain.Post) (*domain
 	return dbPost.toDomain(), nil
 }
 
-func (r *PostRepository) GetByID(ctx context.Context, userID int64) (*domain.Post, error) {
+func (r *PostRepository) GetByID(ctx context.Context, postID int64) (*domain.Post, error) {
 	txCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
@@ -73,7 +73,7 @@ func (r *PostRepository) GetByID(ctx context.Context, userID int64) (*domain.Pos
         WHERE id = $1
     `
 	var post dbPost
-	err := r.db.GetContext(txCtx, &post, query, userID)
+	err := r.db.GetContext(txCtx, &post, query, postID)
 	if err != nil {
 		return nil, err
 	}
@@ -138,25 +138,28 @@ func (r *PostRepository) Update(ctx context.Context, post *domain.Post) error {
 	return nil
 }
 
-func (r *PostRepository) Delete(ctx context.Context, postID int64) error {
+func (r *PostRepository) Delete(ctx context.Context, postID int64) (string, error) {
 	tx, err := r.db.Beginx()
 	if err != nil {
-		return err
+		return "", err
 	}
-	defer tx.Rollback()
+	defer tx.Rollback() // откат, если коммит не выполнен
 
 	txCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
-	query := `
-		DELETE FROM posts WHERE id = $1
-	`
-	_, err = tx.ExecContext(txCtx, query, postID)
+	query := `DELETE FROM posts WHERE id = $1 RETURNING title`
+	var title string
+	err = tx.QueryRowContext(txCtx, query, postID).Scan(&title)
 	if err != nil {
-		return err
+		if err == sql.ErrNoRows {
+			return "", err
+		}
+		return "", err
 	}
+
 	if err = tx.Commit(); err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return title, nil
 }
