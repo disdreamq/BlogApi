@@ -40,6 +40,7 @@ func LoggingMiddleware(logger zerolog.Logger) func(http.Handler) http.Handler {
 			}
 
 			ctx := context.WithValue(r.Context(), "trace_id", traceID)
+			ctx = logger.WithContext(ctx)
 			r = r.WithContext(ctx)
 
 			w.Header().Set("X-Request-ID", traceID)
