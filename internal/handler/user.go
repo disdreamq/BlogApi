@@ -21,6 +21,12 @@ type CreateUserRequest struct {
 	Email    string `json:"email" example:"user@example.com"`
 	Password string `json:"password" example:"password123"`
 }
+type UpdateUserRequest struct {
+	ID       int64  `json:"id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password" example:"password123"`
+}
 
 type UserResponse struct {
 	ID        int64     `json:"id"`
@@ -63,7 +69,7 @@ func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error": "invalid JSON"}`, http.StatusBadRequest)
 		return
 	}
-	u, err := c.userService.Create(r.Context(), userReq.Username, userReq.Email, userReq.Password)
+	user, err := c.userService.Create(r.Context(), userReq.Username, userReq.Email, userReq.Password)
 	if err != nil {
 		switch err {
 		case service.ErrUnexpected:
@@ -79,7 +85,7 @@ func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(NewUserResponse(u))
+	json.NewEncoder(w).Encode(NewUserResponse(user))
 }
 
 // GetByID retrieves a user by their ID
@@ -88,15 +94,14 @@ func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Param        Authorization  header      string  true  "Bearer token" Format(bearer)
-// @Security       BearerAuth
+// @Security     BearerAuth
 // @Param        userID  path      int  true  "User ID"
 // @Success      200     {object}  UserResponse
 // @Failure      400     {object}  ErrorResponse  "invalid user ID"
 // @Failure      401     {object}  ErrorResponse  "unauthorized"
 // @Failure      404     {object}  ErrorResponse  "user not found"
 // @Failure      500     {object}  ErrorResponse  "failed to get user"
-// @Router       /users/{userID} [get]
+// @Router       /users/id/{userID} [get]
 func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	userID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
@@ -109,13 +114,15 @@ func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 		switch err {
 		case service.ErrUserNotFound:
 			http.Error(w, `{"error": "user not found"}`, http.StatusNotFound)
+			return
 		default:
 			http.Error(w, `{"error": "failed to get user"}`, http.StatusBadRequest)
+			return
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
+	json.NewEncoder(w).Encode(NewUserResponse(user))
 }
 
 // GetByEmail retrieves a user by their email
@@ -124,14 +131,13 @@ func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Param        Authorization  header      string  true  "Bearer token" Format(bearer)
-// @Security       BearerAuth
+// @Security     BearerAuth
 // @Param        email  path      string  true  "User Email"
 // @Success      200    {object}  UserResponse
 // @Failure      400    {object}  ErrorResponse  "failed to get user"
 // @Failure      401    {object}  ErrorResponse  "unauthorized"
 // @Failure      404    {object}  ErrorResponse  "user not found"
-// @Router       /users/{email} [get]
+// @Router       /users/email/{email} [get]
 func (c *UserController) GetByEmail(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	email := chi.URLParam(r, "email")
@@ -140,13 +146,15 @@ func (c *UserController) GetByEmail(w http.ResponseWriter, r *http.Request) {
 		switch err {
 		case service.ErrUserNotFound:
 			http.Error(w, `{"error": "user not found"}`, http.StatusNotFound)
+			return
 		default:
 			http.Error(w, `{"error": "failed to get user"}`, http.StatusBadRequest)
+			return
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
+	json.NewEncoder(w).Encode(NewUserResponse(user))
 }
 
 // Update updates an existing user
@@ -155,10 +163,9 @@ func (c *UserController) GetByEmail(w http.ResponseWriter, r *http.Request) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Param        Authorization  header      string  true  "Bearer token" Format(bearer)
-// @Security       BearerAuth
+// @Security     BearerAuth
 // @Param        userID    path      int                  true  "User ID"
-// @Param        request   body      CreateUserRequest    true  "User data to update"
+// @Param        request   body      UpdateUserRequest    true  "User data to update"
 // @Success      200       {string} string               "OK"
 // @Failure      400       {object} ErrorResponse        "invalid user ID / invalid JSON"
 // @Failure      401       {object} ErrorResponse        "unauthorized"
@@ -167,7 +174,7 @@ func (c *UserController) GetByEmail(w http.ResponseWriter, r *http.Request) {
 // @Router       /users/{userID} [put]
 func (c *UserController) Update(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var userReq CreateUserRequest
+	var userReq UpdateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&userReq); err != nil {
 		http.Error(w, `{"error": "invalid JSON"}`, http.StatusBadRequest)
 		return
@@ -203,8 +210,7 @@ func (c *UserController) Update(w http.ResponseWriter, r *http.Request) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Param        Authorization  header      string  true  "Bearer token" Format(bearer)
-// @Security       BearerAuth
+// @Security     BearerAuth
 // @Param        userID  path      int  true  "User ID"
 // @Success      204     {string} string  "No Content"
 // @Failure      400     {object} ErrorResponse  "invalid user ID"
