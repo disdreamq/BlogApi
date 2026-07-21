@@ -20,7 +20,7 @@ type PostUpdater interface {
 	Update(ctx context.Context, post *domain.Post) error
 }
 type PostDeleter interface {
-	Delete(ctx context.Context, id int64) error
+	Delete(ctx context.Context, id int64) (string, error)
 }
 
 type PostRepository interface {
