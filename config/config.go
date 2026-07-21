@@ -31,7 +31,7 @@ type Config struct {
 
 	// Auth
 	SecretKey string `envconfig:"SECRET_KEY" required:"true"`
-	Expiry    int    `envconfig:"EXPIRY" default:"10"`
+	Expiry    int    `envconfig:"EXPIRY" required:"true"`
 
 	// PRM
 	PublicRPM    int `envconfig:"PUBLIC_RPM" default:"5"`
