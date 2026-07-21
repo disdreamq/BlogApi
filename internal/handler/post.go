@@ -16,8 +16,12 @@ type PostController struct {
 }
 
 type CreatePostRequest struct {
+	Title   string `json:"title"`
+	Content string `json:"content"`
+}
+
+type UpdatePostRequest struct {
 	ID      int64  `json:"id"`
-	UserID  int64  `json:"user_id"`
 	Title   string `json:"title"`
 	Content string `json:"content"`
 }
@@ -42,8 +46,7 @@ func NewPostController(postService port.PostService) *PostController {
 // @Tags         posts
 // @Accept       json
 // @Produce      json
-// @Param        Authorization  header      string  true  "Bearer token" Format(bearer)
-// @Security       BearerAuth
+// @Security     BearerAuth
 // @Param        request  body      CreatePostRequest  true  "Post data"
 // @Success      201      {object}  PostResponse
 // @Failure      400      {object} ErrorResponse  "invalid JSON / invalid title or content"
@@ -58,8 +61,8 @@ func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error": "invalid JSON"}`, http.StatusBadRequest)
 		return
 	}
-	postReq.UserID = r.Context().Value("userID").(int64)
-	post, err := c.postService.Create(r.Context(), postReq.UserID, postReq.Title, postReq.Content)
+	UserID, _ := r.Context().Value("userID").(int64)
+	post, err := c.postService.Create(r.Context(), UserID, postReq.Title, postReq.Content)
 	if err != nil {
 		switch err {
 		case service.ErrUnexpected:
@@ -70,8 +73,10 @@ func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
 			return
 		case domain.ErrInvalidTitle:
 			http.Error(w, `"error": "title must contain at least 1 character"`, http.StatusBadRequest)
+			return
 		case domain.ErrInvalidContent:
 			http.Error(w, `"error": "content must contain at least 1 character"`, http.StatusBadRequest)
+			return
 		default:
 			http.Error(w, `{"error": "failed to create post"}`, http.StatusBadRequest)
 			return
@@ -88,15 +93,13 @@ func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
 // @Tags         posts
 // @Accept       json
 // @Produce      json
-// @Param        Authorization  header      string  true  "Bearer token" Format(bearer)
-// @Security       BearerAuth
 // @Param        postID  path      int  true  "Post ID"
 // @Success      200     {object}  PostResponse
 // @Failure      400     {object} ErrorResponse  "invalid post ID"
 // @Failure      401     {object} ErrorResponse  "unauthorized"
 // @Failure      404     {object} ErrorResponse  "post not found"
 // @Failure      500     {object} ErrorResponse  "failed to get post"
-// @Router       /posts/{postID} [get]
+// @Router       /posts/id/{postID} [get]
 func (c *PostController) GetByID(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	postID, err := strconv.ParseInt(chi.URLParam(r, "postID"), 10, 64)
@@ -107,10 +110,12 @@ func (c *PostController) GetByID(w http.ResponseWriter, r *http.Request) {
 	post, err := c.postService.GetByID(r.Context(), postID)
 	if err != nil {
 		switch err {
-		case service.ErrUserNotFound:
+		case service.ErrPostNotFound:
 			http.Error(w, `{"error": "post not found"}`, http.StatusNotFound)
+			return
 		default:
 			http.Error(w, `{"error": "failed to get post"}`, http.StatusBadRequest)
+			return
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -124,14 +129,12 @@ func (c *PostController) GetByID(w http.ResponseWriter, r *http.Request) {
 // @Tags         posts
 // @Accept       json
 // @Produce      json
-// @Param        Authorization  header      string  true  "Bearer token" Format(bearer)
-// @Security       BearerAuth
 // @Param        title   path      string  true  "Post Title"
 // @Success      200     {object}  PostResponse
 // @Failure      400     {object} ErrorResponse  "invalid post title / failed to get post"
 // @Failure      401     {object} ErrorResponse  "unauthorized"
 // @Failure      404     {object} ErrorResponse  "post not found"
-// @Router       /posts/{title} [get]
+// @Router       /posts/title/{title} [get]
 func (c *PostController) GetByTitle(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	title := chi.URLParam(r, "title")
@@ -142,10 +145,12 @@ func (c *PostController) GetByTitle(w http.ResponseWriter, r *http.Request) {
 	post, err := c.postService.GetByTitle(r.Context(), title)
 	if err != nil {
 		switch err {
-		case service.ErrUserNotFound:
+		case service.ErrPostNotFound:
 			http.Error(w, `{"error": "post not found"}`, http.StatusNotFound)
+			return
 		default:
 			http.Error(w, `{"error": "failed to get post"}`, http.StatusBadRequest)
+			return
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -159,10 +164,9 @@ func (c *PostController) GetByTitle(w http.ResponseWriter, r *http.Request) {
 // @Tags         posts
 // @Accept       json
 // @Produce      json
-// @Param        Authorization  header      string  true  "Bearer token" Format(bearer)
-// @Security       BearerAuth
+// @Security     BearerAuth
 // @Param        postID    path      int                true  "Post ID"
-// @Param        request   body      CreatePostRequest  true  "Post data to update"
+// @Param        request   body      UpdatePostRequest  true  "Post data to update"
 // @Success      200       {string} string             "OK"
 // @Failure      400       {object} ErrorResponse      "invalid post ID / invalid JSON / invalid user ID"
 // @Failure      401       {object} ErrorResponse      "unauthorized"
@@ -171,7 +175,7 @@ func (c *PostController) GetByTitle(w http.ResponseWriter, r *http.Request) {
 // @Router       /posts/{postID} [put]
 func (c *PostController) Update(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var postReq CreatePostRequest
+	var postReq UpdatePostRequest
 	if err := json.NewDecoder(r.Body).Decode(&postReq); err != nil {
 		http.Error(w, `{"error": "invalid JSON"}`, http.StatusBadRequest)
 		return
@@ -202,8 +206,7 @@ func (c *PostController) Update(w http.ResponseWriter, r *http.Request) {
 // @Tags         posts
 // @Accept       json
 // @Produce      json
-// @Param        Authorization  header      string  true  "Bearer token" Format(bearer)
-// @Security       BearerAuth
+// @Security     BearerAuth
 // @Param        postID  path      int  true  "Post ID"
 // @Success      204     {string} string  "No Content"
 // @Failure      400     {object} ErrorResponse  "invalid post ID / invalid user ID"
@@ -218,18 +221,22 @@ func (c *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error": "invalid post ID"}`, http.StatusBadRequest)
 		return
 	}
-	currUserID, err := strconv.ParseInt(r.Context().Value("userID").(string), 10, 64)
-	if err != nil {
+
+	currUserID, ok := r.Context().Value("userID").(int64)
+	if !ok {
 		http.Error(w, `{"error": "invalid user ID"}`, http.StatusBadRequest)
 		return
 	}
+
 	err = c.postService.Delete(r.Context(), currUserID, postID)
 	if err != nil {
 		switch err {
 		case service.ErrPostNotFound:
 			http.Error(w, `{"error": "post not found"}`, http.StatusNotFound)
+			return
 		default:
 			http.Error(w, `{"error": "failed to get post"}`, http.StatusBadRequest)
+			return
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")
