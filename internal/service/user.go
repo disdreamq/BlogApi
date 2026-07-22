@@ -23,10 +23,12 @@ func (u *UserService) Create(ctx context.Context, username, email, password stri
 	if err != nil {
 		return nil, err
 	}
+
 	domainUser, err := domain.NewUser(username, email, passwordHash)
 	if err != nil {
 		return nil, err
 	}
+
 	user, err := u.userRepo.Create(ctx, domainUser)
 	if err != nil {
 		switch err {
@@ -144,13 +146,10 @@ func (u *UserService) Delete(ctx context.Context, currUserID int64, userID int64
 	return nil
 }
 func (u *UserService) validateCurrUser(ctx context.Context, currUserID, userID int64) bool {
-	user, err := u.GetByID(ctx, userID)
-	if err != nil {
-		return false
-	}
 	logger := log.Ctx(ctx)
 	trace_id, _ := ctx.Value("trace_id").(string)
-	if user.ID != currUserID {
+
+	if userID != currUserID {
 		logger.Debug().
 			Str("trace_id", trace_id).
 			Int64("current_user_id", currUserID).
@@ -158,6 +157,7 @@ func (u *UserService) validateCurrUser(ctx context.Context, currUserID, userID i
 			Msg("Validation failed for user.")
 		return false
 	}
+
 	logger.Debug().
 		Str("trace_id", trace_id).
 		Int64("current_user_id", currUserID).
