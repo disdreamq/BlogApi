@@ -53,7 +53,7 @@ func TestUserService_Create(t *testing.T) {
 	t.Run("happy path", func(t *testing.T) {
 		repo := &mockUserRepo{
 			createUserFunc: func(ctx context.Context, user *domain.User) (*domain.User, error) {
-				return &domain.User{ID: 67, Username: user.Username, Email: user.Email}, nil
+				return &domain.User{ID: 67, Username: user.Username, Email: user.Email, PasswordHash: user.PasswordHash}, nil
 			},
 		}
 		svc := service.NewUserService(repo, hasher)
@@ -185,8 +185,8 @@ func TestUserService_Update(t *testing.T) {
 		}
 		svc := service.NewUserService(repo, hasher)
 		err := svc.Update(context.Background(), 67, 67, "testuser", "test@mail.com", "hashed_password123")
-		if err != service.ErrUserNotFound {
-			t.Errorf("got error %v, want %v", err, service.ErrUserNotFound)
+		if err != nil {
+			t.Errorf("got error %v, want %v", err, nil)
 		}
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
