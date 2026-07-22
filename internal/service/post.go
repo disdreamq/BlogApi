@@ -30,6 +30,12 @@ func (p *PostService) Create(ctx context.Context, userID int64, title, content s
 	if err != nil {
 		return nil, ErrLinkedUserNotFound
 	}
+	data, err := json.Marshal(post)
+	if err != nil {
+		return nil, err
+	}
+	p.cache.Set(ctx, "post_"+strconv.FormatInt(post.ID, 10), data, 10*time.Minute)
+
 	logger := log.Ctx(ctx)
 	trace_id, _ := ctx.Value("trace_id").(string)
 	logger.Info().
