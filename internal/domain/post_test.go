@@ -23,6 +23,7 @@ func TestNewPost(t *testing.T) {
 		{"empty content", domain.ErrInvalidContent, 67, 1, "title", ""},
 		{"too long content", domain.ErrInvalidContent, 67, 1, "title", strings.Repeat("content", 1000)},
 		{"invalid user id", domain.ErrInvalidUserId, 67, -10, "title", "content"},
+		{"invalid post id", domain.ErrInvalidID, -10, 1, "title", "content"},
 	}
 
 	for _, tt := range tests {
