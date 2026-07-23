@@ -138,12 +138,34 @@ func (r *PostRepository) Update(ctx context.Context, post *domain.Post) error {
 	return nil
 }
 
+func (r *PostRepository) UpdateWithValidate(ctx context.Context, currUserID int64, post *domain.Post) error {
+	tx, err := r.db.Beginx()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	txCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
+
+	query := `UPDATE posts SET title = $1, content = $2
+			  WHERE id = $3 AND user_id = $4`
+	err = tx.QueryRowContext(txCtx, query, post.Title, post.Content, post.ID, currUserID).Scan()
+	if err != nil {
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *PostRepository) Delete(ctx context.Context, postID int64) (string, error) {
 	tx, err := r.db.Beginx()
 	if err != nil {
 		return "", err
 	}
-	defer tx.Rollback() // откат, если коммит не выполнен
+	defer tx.Rollback()
 
 	txCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
@@ -151,6 +173,31 @@ func (r *PostRepository) Delete(ctx context.Context, postID int64) (string, erro
 	query := `DELETE FROM posts WHERE id = $1 RETURNING title`
 	var title string
 	err = tx.QueryRowContext(txCtx, query, postID).Scan(&title)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", err
+		}
+		return "", err
+	}
+
+	if err = tx.Commit(); err != nil {
+		return "", err
+	}
+	return title, nil
+}
+func (r *PostRepository) DeleteWithValidate(ctx context.Context, currUserID, ID int64) (string, error) {
+	tx, err := r.db.Beginx()
+	if err != nil {
+		return "", err
+	}
+	defer tx.Rollback()
+
+	txCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
+
+	query := `DELETE FROM posts WHERE id = $1 AND user_id = $2 RETURNING title`
+	var title string
+	err = tx.QueryRowContext(txCtx, query, ID, currUserID).Scan(&title)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return "", err

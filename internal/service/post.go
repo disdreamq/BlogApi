@@ -22,7 +22,7 @@ func NewPostService(postRepo port.PostRepository, cache port.Cache) *PostService
 }
 
 func (p *PostService) Create(ctx context.Context, userID int64, title, content string) (*domain.Post, error) {
-	domainPost, err := domain.NewPost(userID, title, content)
+	domainPost, err := domain.NewPost(0, userID, title, content)
 	if err != nil {
 		return nil, err
 	}
@@ -118,11 +118,34 @@ func (p *PostService) GetByTitle(ctx context.Context, title string) (*domain.Pos
 
 }
 
-func (p *PostService) Update(ctx context.Context, currUserID, postID int64, title, content string) error {
-	if ok := p.validateCurrUser(ctx, currUserID, postID); !ok {
-		return ErrMethodNotAllowed
+func (p *PostService) UpdateWithValidate(ctx context.Context, currUserID, postID int64, title, content string) error {
+	post, err := domain.NewPost(postID, currUserID, title, content)
+	if err != nil {
+		return err
 	}
-	post, err := domain.NewPost(currUserID, title, content)
+	err = p.postRepo.UpdateWithValidate(ctx, currUserID, post)
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return ErrPostNotFound
+		default:
+			return ErrUnexpected
+		}
+	}
+	logger := log.Ctx(ctx)
+	trace_id, _ := ctx.Value("trace_id").(string)
+	logger.Debug().
+		Str("trace_id", trace_id).
+		Int64("post_id", postID).
+		Msg("Updated post")
+	p.cache.Del(ctx, "post_"+strconv.FormatInt(postID, 10))
+	p.cache.Del(ctx, "post_"+title)
+	return nil
+
+}
+
+func (p *PostService) Update(ctx context.Context, postID int64, title, content string) error {
+	post, err := domain.NewPost(postID, 0, title, content)
 	if err != nil {
 		return err
 	}
@@ -144,13 +167,9 @@ func (p *PostService) Update(ctx context.Context, currUserID, postID int64, titl
 	p.cache.Del(ctx, "post_"+strconv.FormatInt(postID, 10))
 	p.cache.Del(ctx, "post_"+title)
 	return nil
-
 }
 
-func (p *PostService) Delete(ctx context.Context, currUserID int64, postID int64) error {
-	if ok := p.validateCurrUser(ctx, currUserID, postID); !ok {
-		return ErrMethodNotAllowed
-	}
+func (p *PostService) Delete(ctx context.Context, postID int64) error {
 	title, err := p.postRepo.Delete(ctx, postID)
 	if err != nil {
 		switch err {
@@ -170,25 +189,24 @@ func (p *PostService) Delete(ctx context.Context, currUserID int64, postID int64
 	p.cache.Del(ctx, "post_"+title)
 	return nil
 }
-func (p *PostService) validateCurrUser(ctx context.Context, currUserID int64, postID int64) bool {
-	post, err := p.GetByID(ctx, postID)
+
+func (p *PostService) DeleteWithValidate(ctx context.Context, currUserID, postID int64) error {
+	title, err := p.postRepo.DeleteWithValidate(ctx, currUserID, postID)
 	if err != nil {
-		return false
+		switch err {
+		case sql.ErrNoRows:
+			return ErrPostNotFound
+		default:
+			return ErrUnexpected
+		}
 	}
 	logger := log.Ctx(ctx)
 	trace_id, _ := ctx.Value("trace_id").(string)
-	if post.UserID != currUserID {
-		logger.Debug().
-			Str("trace_id", trace_id).
-			Int64("curr_user_id", currUserID).
-			Int64("user_id", post.UserID).
-			Msg("Validation failed for user.")
-		return false
-	}
 	logger.Debug().
 		Str("trace_id", trace_id).
-		Int64("curr_user_id", currUserID).
-		Int64("user_id", post.UserID).
-		Msg("Validated user.")
-	return true
+		Int64("post_id", postID).
+		Msg("Deleted post")
+	p.cache.Del(ctx, "post_"+strconv.FormatInt(postID, 10))
+	p.cache.Del(ctx, "post_"+title)
+	return nil
 }
