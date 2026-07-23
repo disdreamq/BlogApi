@@ -11,14 +11,17 @@ type Post struct {
 	UpdatedAt time.Time
 }
 
-func NewPost(userID int64, title, content string) (*Post, error) {
+func NewPost(ID, userID int64, title, content string) (*Post, error) {
+	if ID < 0 {
+		return nil, ErrInvalidID
+	}
 	if title == "" || len(title) > 100 {
 		return nil, ErrInvalidTitle
 	}
 	if content == "" || len(content) > 1000 {
 		return nil, ErrInvalidContent
 	}
-	if userID <= 0 {
+	if userID < 0 {
 		return nil, ErrInvalidUserId
 	}
 
