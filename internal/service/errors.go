@@ -21,6 +21,8 @@ var (
 	// Post
 	ErrPostNotFound       = errors.New("Post not found.")
 	ErrLinkedUserNotFound = errors.New("Linked user not found.")
+	ErrUpdatePostFailed   = errors.New("Failed to update post.")
+	ErrFailedToDeletePost = errors.New("Failed to delete post.")
 
 	// Cache
 	ErrCacheUnmarshal = errors.New("Can not unmarshal data from cache.")
