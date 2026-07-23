@@ -19,8 +19,16 @@ type PostReaderByTitle interface {
 type PostUpdater interface {
 	Update(ctx context.Context, post *domain.Post) error
 }
+
+type PostUpdaterWithValidation interface {
+	UpdateWithValidate(ctx context.Context, currUserID int64, post *domain.Post) error
+}
+
 type PostDeleter interface {
 	Delete(ctx context.Context, ID int64) (string, error)
+}
+type PostDeleterWithValidate interface {
+	DeleteWithValidate(ctx context.Context, currUserID, ID int64) (string, error)
 }
 
 type PostRepository interface {
@@ -29,4 +37,6 @@ type PostRepository interface {
 	PostCreater
 	PostUpdater
 	PostDeleter
+	PostUpdaterWithValidation
+	PostDeleterWithValidate
 }
