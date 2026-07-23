@@ -153,7 +153,7 @@ func (p *PostService) Update(ctx context.Context, postID int64, title, content s
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
-			return ErrPostNotFound
+			return ErrUpdatePostFailed
 		default:
 			return ErrUnexpected
 		}
@@ -195,7 +195,7 @@ func (p *PostService) DeleteWithValidate(ctx context.Context, currUserID, postID
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
-			return ErrPostNotFound
+			return ErrFailedToDeletePost
 		default:
 			return ErrUnexpected
 		}
