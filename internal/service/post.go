@@ -195,7 +195,7 @@ func (p *PostService) DeleteWithValidate(ctx context.Context, currUserID, postID
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
-			return ErrFailedToDeletePost
+			return ErrDeletePostFailed
 		default:
 			return ErrUnexpected
 		}
