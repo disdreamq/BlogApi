@@ -191,7 +191,7 @@ func (c *PostController) Update(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error": "invalid user ID"}`, http.StatusBadRequest)
 		return
 	}
-	err = c.postService.Update(r.Context(), currUserID, postReq.ID, postReq.Title, postReq.Content)
+	err = c.postService.UpdateWithValidate(r.Context(), currUserID, postReq.ID, postReq.Title, postReq.Content)
 	if err != nil {
 		switch err {
 		case service.ErrUserNotFound:
@@ -234,7 +234,7 @@ func (c *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = c.postService.Delete(r.Context(), currUserID, postID)
+	err = c.postService.DeleteWithValidate(r.Context(), currUserID, postID)
 	if err != nil {
 		switch err {
 		case service.ErrPostNotFound:
