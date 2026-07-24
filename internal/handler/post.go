@@ -16,24 +16,28 @@ type PostController struct {
 	postService port.PostService
 }
 
-type CreatePostRequest struct {
+type createPostRequest struct {
 	Title   string `json:"title"`
 	Content string `json:"content"`
 }
 
-type UpdatePostRequest struct {
+type updatePostRequest struct {
 	ID      int64  `json:"id"`
 	Title   string `json:"title"`
 	Content string `json:"content"`
 }
 
-// PostResponse represents a post in the response
-type PostResponse struct {
+// postResponse represents a post in the response
+type postResponse struct {
 	ID        int64       `json:"id"`
 	UserID    int64       `json:"user_id"`
 	Title     string      `json:"title"`
 	Content   string      `json:"content"`
 	CreatedAt interface{} `json:"created_at"`
+}
+
+func newPostResponse(p *domain.Post) *postResponse {
+	return &postResponse{ID: p.ID, UserID: p.UserID, Title: p.Title, Content: p.Content, CreatedAt: p.CreatedAt}
 }
 
 func NewPostController(postService port.PostService) *PostController {
@@ -57,7 +61,7 @@ func NewPostController(postService port.PostService) *PostController {
 // @Router       /posts/ [post]
 func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var postReq CreatePostRequest
+	var postReq createPostRequest
 	if err := json.NewDecoder(r.Body).Decode(&postReq); err != nil {
 		http.Error(w, `{"error": "invalid JSON"}`, http.StatusBadRequest)
 		return
@@ -85,7 +89,7 @@ func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(post)
+	json.NewEncoder(w).Encode(newPostResponse(post))
 }
 
 // GetByID retrieves a post by its ID
@@ -121,7 +125,7 @@ func (c *PostController) GetByID(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(post)
+	json.NewEncoder(w).Encode(newPostResponse(post))
 }
 
 // GetByTitle retrieves a post by its title
@@ -161,7 +165,7 @@ func (c *PostController) GetByTitle(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(post)
+	json.NewEncoder(w).Encode(newPostResponse(post))
 }
 
 // Update updates an existing post
@@ -181,7 +185,7 @@ func (c *PostController) GetByTitle(w http.ResponseWriter, r *http.Request) {
 // @Router       /posts/{postID} [put]
 func (c *PostController) Update(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var postReq UpdatePostRequest
+	var postReq updatePostRequest
 	if err := json.NewDecoder(r.Body).Decode(&postReq); err != nil {
 		http.Error(w, `{"error": "invalid JSON"}`, http.StatusBadRequest)
 		return
