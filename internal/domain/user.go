@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 type User struct {
 	ID           int64
@@ -14,7 +17,7 @@ func NewUser(username, email, passwordHash string) (*User, error) {
 	if username == "" || len(username) > 30 {
 		return nil, ErrInvalidUserName
 	}
-	if email == "" {
+	if email == "" || !strings.Contains(email, "@") || !strings.Contains(email, ".") {
 		return nil, ErrInvalidEmail
 	}
 
