@@ -17,27 +17,27 @@ type UserController struct {
 	userService port.UserService
 }
 
-type CreateUserRequest struct {
+type createUserRequest struct {
 	Username string `json:"username" example:"johndoe"`
 	Email    string `json:"email" example:"user@example.com"`
 	Password string `json:"password" example:"password123"`
 }
-type UpdateUserRequest struct {
+type updateUserRequest struct {
 	ID       int64  `json:"id"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Password string `json:"password" example:"password123"`
 }
 
-type UserResponse struct {
+type userResponse struct {
 	ID        int64     `json:"id"`
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
-func NewUserResponse(u *domain.User) *UserResponse {
-	return &UserResponse{
+func NewUserResponse(u *domain.User) *userResponse {
+	return &userResponse{
 		ID:        u.ID,
 		Username:  u.Username,
 		Email:     u.Email,
@@ -65,7 +65,7 @@ func NewUserController(userService port.UserService) *UserController {
 // @Router       /register [post]
 func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var userReq CreateUserRequest
+	var userReq createUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&userReq); err != nil {
 		http.Error(w, `{"error": "invalid JSON"}`, http.StatusBadRequest)
 		return
@@ -180,7 +180,7 @@ func (c *UserController) GetByEmail(w http.ResponseWriter, r *http.Request) {
 // @Router       /users/{userID} [put]
 func (c *UserController) Update(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var userReq UpdateUserRequest
+	var userReq updateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&userReq); err != nil {
 		http.Error(w, `{"error": "invalid JSON"}`, http.StatusBadRequest)
 		return
