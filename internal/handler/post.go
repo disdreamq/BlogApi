@@ -77,10 +77,10 @@ func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, `{"error": "linked user with this id doesnt exists."}`, http.StatusConflict)
 			return
 		case domain.ErrInvalidTitle:
-			http.Error(w, `"error": "title must contain at least 1 character"`, http.StatusBadRequest)
+			http.Error(w, `{"error": "title must contain at least 1 character"`, http.StatusBadRequest)
 			return
 		case domain.ErrInvalidContent:
-			http.Error(w, `"error": "content must contain at least 1 character"`, http.StatusBadRequest)
+			http.Error(w, `{"error": "content must contain at least 1 character"`, http.StatusBadRequest)
 			return
 		default:
 			http.Error(w, `{"error": "failed to create post"}`, http.StatusBadRequest)
