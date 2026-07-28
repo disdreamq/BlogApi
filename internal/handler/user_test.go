@@ -49,33 +49,80 @@ func TestUserController_Create(t *testing.T) {
 		expectedStatus int
 		expectedBody   string
 	}{
-		{"happy path", mockUserService{mockCreateFunc: func(ctx context.Context, username, email, password string) (*domain.User, error) {
-			return &domain.User{ID: 67, Username: username, Email: email, PasswordHash: password}, nil
-		}}, createUserRequest{Username: "johndoe", Email: "user@example.com", Password: "password123"}, http.StatusCreated, resp},
-		{"empty username", mockUserService{mockCreateFunc: func(ctx context.Context, username, email, password string) (*domain.User, error) {
-			return nil, domain.ErrInvalidUserName
-		}}, createUserRequest{Username: "", Email: "user@example.com", Password: "password123"}, http.StatusBadRequest, ""},
-		{"empty email", mockUserService{mockCreateFunc: func(ctx context.Context, username, email, password string) (*domain.User, error) {
-			return nil, domain.ErrInvalidEmail
-		}}, createUserRequest{Username: "johndoe", Email: "", Password: "password123"}, http.StatusBadRequest, ""},
-		{"empty password", mockUserService{mockCreateFunc: func(ctx context.Context, username, email, password string) (*domain.User, error) {
-			return nil, service.ErrInvalidPasswordLength
-		}}, createUserRequest{Username: "johndoe", Email: "user@example.com", Password: ""}, http.StatusBadRequest, ""},
-		{"invalid email", mockUserService{mockCreateFunc: func(ctx context.Context, username, email, password string) (*domain.User, error) {
-			return nil, domain.ErrInvalidEmail
-		}}, createUserRequest{Username: "johndoe", Email: "invalidemail", Password: "password123"}, http.StatusBadRequest, ""},
-		{"too long username", mockUserService{mockCreateFunc: func(ctx context.Context, username, email, password string) (*domain.User, error) {
-			return nil, domain.ErrInvalidUserName
-		}}, createUserRequest{Username: strings.Repeat("a", 31), Email: "user@example.com", Password: "password123"}, http.StatusBadRequest, ""},
-		{"too long password", mockUserService{mockCreateFunc: func(ctx context.Context, username, email, password string) (*domain.User, error) {
-			return nil, service.ErrInvalidPasswordLength
-		}}, createUserRequest{Username: "johndoe", Email: "user@example.com", Password: strings.Repeat("a", 61)}, http.StatusBadRequest, ""},
-		{"too short password", mockUserService{mockCreateFunc: func(ctx context.Context, username, email, password string) (*domain.User, error) {
-			return nil, service.ErrInvalidPasswordLength
-		}}, createUserRequest{Username: "johndoe", Email: "user@example.com", Password: "short"}, http.StatusBadRequest, ""},
-		{"user already exists", mockUserService{mockCreateFunc: func(ctx context.Context, username, email, password string) (*domain.User, error) {
-			return nil, service.ErrUserAlreadyExists
-		}}, createUserRequest{Username: "johndoe", Email: "user@example.com", Password: "short"}, http.StatusConflict, ""},
+		{
+			"happy path",
+			mockUserService{mockCreateFunc: func(ctx context.Context, username, email, password string) (*domain.User, error) {
+				return &domain.User{ID: 67, Username: username, Email: email, PasswordHash: password}, nil
+			}},
+			createUserRequest{Username: "johndoe", Email: "user@example.com", Password: "password123"},
+			http.StatusCreated,
+			resp,
+		},
+		{
+			"empty username",
+			mockUserService{mockCreateFunc: func(ctx context.Context, username, email, password string) (*domain.User, error) {
+				return nil, domain.ErrInvalidUserName
+			}},
+			createUserRequest{Username: "", Email: "user@example.com", Password: "password123"},
+			http.StatusBadRequest,
+			"",
+		},
+		{
+			"empty email", mockUserService{mockCreateFunc: func(ctx context.Context, username, email, password string) (*domain.User, error) {
+				return nil, domain.ErrInvalidEmail
+			}},
+			createUserRequest{Username: "johndoe", Email: "", Password: "password123"},
+			http.StatusBadRequest,
+			"",
+		},
+		{
+			"empty password", mockUserService{mockCreateFunc: func(ctx context.Context, username, email, password string) (*domain.User, error) {
+				return nil, service.ErrInvalidPasswordLength
+			}},
+			createUserRequest{Username: "johndoe", Email: "user@example.com", Password: ""},
+			http.StatusBadRequest,
+			"",
+		},
+		{
+			"invalid email", mockUserService{mockCreateFunc: func(ctx context.Context, username, email, password string) (*domain.User, error) {
+				return nil, domain.ErrInvalidEmail
+			}},
+			createUserRequest{Username: "johndoe", Email: "invalidemail", Password: "password123"},
+			http.StatusBadRequest,
+			"",
+		},
+		{
+			"too long username", mockUserService{mockCreateFunc: func(ctx context.Context, username, email, password string) (*domain.User, error) {
+				return nil, domain.ErrInvalidUserName
+			}},
+			createUserRequest{Username: strings.Repeat("a", 31), Email: "user@example.com", Password: "password123"},
+			http.StatusBadRequest,
+			"",
+		},
+		{
+			"too long password", mockUserService{mockCreateFunc: func(ctx context.Context, username, email, password string) (*domain.User, error) {
+				return nil, service.ErrInvalidPasswordLength
+			}},
+			createUserRequest{Username: "johndoe", Email: "user@example.com", Password: strings.Repeat("a", 61)},
+			http.StatusBadRequest,
+			"",
+		},
+		{
+			"too short password", mockUserService{mockCreateFunc: func(ctx context.Context, username, email, password string) (*domain.User, error) {
+				return nil, service.ErrInvalidPasswordLength
+			}},
+			createUserRequest{Username: "johndoe", Email: "user@example.com", Password: "short"},
+			http.StatusBadRequest,
+			"",
+		},
+		{
+			"user already exists", mockUserService{mockCreateFunc: func(ctx context.Context, username, email, password string) (*domain.User, error) {
+				return nil, service.ErrUserAlreadyExists
+			}},
+			createUserRequest{Username: "johndoe", Email: "user@example.com", Password: "short"},
+			http.StatusConflict,
+			"",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
