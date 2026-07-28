@@ -4,12 +4,8 @@ import (
 	"context"
 	"os"
 	"testing"
-	"time"
 
-	"github.com/jmoiron/sqlx"
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/modules/postgres"
-	"github.com/testcontainers/testcontainers-go/wait"
+	"github.com/disdreamq/BlogApi/test/fixtures"
 )
 
 var testDB *TestDatabase
@@ -28,34 +24,14 @@ func TestMain(m *testing.M) {
 
 func startTestDatabase() *TestDatabase {
 	ctx := context.Background()
-
-	pgContainer, err := postgres.Run(ctx,
-		"postgres:17-alpine",
-		postgres.WithDatabase("testdb"),
-		postgres.WithUsername("testuser"),
-		postgres.WithPassword("testpass"),
-		testcontainers.WithWaitStrategy(
-			wait.ForLog("database system is ready to accept connections").
-				WithStartupTimeout(60*time.Second),
-		),
-	)
+	testDB, err := StartPostgresContainer(ctx)
 	if err != nil {
 		panic("failed to start postgres container: " + err.Error())
 	}
 
-	connStr, err := pgContainer.ConnectionString(ctx, "sslmode=disable")
-	if err != nil {
-		panic("failed to get connection string: " + err.Error())
+	if err := fixtures.RunMigrations(testDB.ConnStr); err != nil {
+		panic(err)
 	}
 
-	db, err := sqlx.Connect("postgres", connStr)
-	if err != nil {
-		panic("failed to open database connection: " + err.Error())
-	}
-
-	return &TestDatabase{
-		Container: pgContainer,
-		ConnStr:   connStr,
-		DB:        db,
-	}
+	return testDB
 }
