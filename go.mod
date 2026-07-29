@@ -21,8 +21,11 @@ require (
 	github.com/swaggo/http-swagger v1.3.4
 	github.com/testcontainers/testcontainers-go v0.43.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.43.0
+	github.com/testcontainers/testcontainers-go/modules/redis v0.43.0
 	golang.org/x/crypto v0.54.0
 )
+
+require github.com/mdelapenya/tlscert v0.2.0 // indirect
 
 require (
 	dario.cat/mergo v1.0.2 // indirect
