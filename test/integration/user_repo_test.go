@@ -3,6 +3,7 @@ package integration
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -70,7 +71,7 @@ func TestUserRepository_Create(t *testing.T) {
 		prepUser2, _ := domain.NewUser(suffix+"johndoe2", suffix+"user@example.com", "passwordHash123")
 		u1, err := repo.Create(ctx, prepUser1)
 		_, err = repo.Create(ctx, prepUser2)
-		if err != sql.ErrNoRows {
+		if !errors.Is(err, sql.ErrNoRows) {
 			t.Fatal("wanted no rows error, got:", err)
 		}
 		t.Cleanup(func() { _ = repo.Delete(ctx, u1.ID) })
@@ -107,7 +108,7 @@ func TestUserRepository_GetByID(t *testing.T) {
 		repo := postgres.NewUserRepository(db)
 
 		_, err := repo.GetByID(ctx, 67)
-		if err != sql.ErrNoRows {
+		if !errors.Is(err, sql.ErrNoRows) {
 			t.Fatalf("wanted no rows error, got: %v", err)
 		}
 	})
@@ -143,7 +144,7 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 		repo := postgres.NewUserRepository(db)
 
 		_, err := repo.GetByEmail(ctx, "67")
-		if err != sql.ErrNoRows {
+		if !errors.Is(err, sql.ErrNoRows) {
 			t.Fatalf("wanted no rows error, got: %v", err)
 		}
 	})
@@ -186,7 +187,7 @@ func TestUserRepository_Update(t *testing.T) {
 
 		userToUpdate, _ := domain.NewUser("johndoe67", "user67@example.com", "passwordHash12367")
 		err := repo.Update(ctx, userToUpdate)
-		if err != postgres.ErrNoRows {
+		if !errors.Is(err, postgres.ErrNoRows) {
 			t.Fatalf("wanted no rows affected error, got: %v", err)
 		}
 	})
@@ -212,7 +213,7 @@ func TestUserRepository_Delete(t *testing.T) {
 			t.Fatalf("failed to delete user: %v", err)
 		}
 		_, err = repo.GetByID(ctx, u.ID)
-		if err != sql.ErrNoRows {
+		if !errors.Is(err, sql.ErrNoRows) {
 			t.Fatalf("wanted no rows error, got: %v", err)
 		}
 	})

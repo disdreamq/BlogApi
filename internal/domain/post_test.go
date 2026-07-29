@@ -1,6 +1,7 @@
 package domain_test
 
 import (
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -26,7 +27,8 @@ func TestNewPost(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.testName, func(t *testing.T) {
-			if _, err := domain.NewPost(tt.userID, tt.title, tt.content); err != tt.expErr {
+			_, err := domain.NewPost(tt.userID, tt.title, tt.content)
+			if !errors.Is(err, tt.expErr) {
 				t.Errorf("NewPost() negative case got error = %e, want = %e", err, tt.expErr)
 			}
 		})

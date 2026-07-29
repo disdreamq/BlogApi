@@ -3,6 +3,7 @@ package service_test
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"testing"
 
 	"github.com/disdreamq/BlogApi/internal/domain"
@@ -84,7 +85,7 @@ func TestUserService_Create(t *testing.T) {
 		}
 		svc := service.NewUserService(repo, hasher)
 		_, err := svc.Create(context.Background(), "testuser", "test@mail.com", "password123")
-		if err != service.ErrUserAlreadyExists {
+		if !errors.Is(err, service.ErrUserAlreadyExists) {
 			t.Errorf("got error %v, want %v", err, service.ErrUserAlreadyExists)
 		}
 	})
@@ -97,7 +98,7 @@ func TestUserService_Create(t *testing.T) {
 		}
 		svc := service.NewUserService(repo, hasher)
 		_, err := svc.Create(context.Background(), "testuser", "test@mail.com", "password123")
-		if err != service.ErrUserAlreadyExists {
+		if !errors.Is(err, service.ErrUserAlreadyExists) {
 			t.Errorf("got error %v, want %v", err, service.ErrUserAlreadyExists)
 		}
 	})
@@ -133,7 +134,7 @@ func TestUserService_GetByID(t *testing.T) {
 		}
 		svc := service.NewUserService(repo, hasher)
 		_, err := svc.GetByID(context.Background(), user.ID)
-		if err != service.ErrUserNotFound {
+		if !errors.Is(err, service.ErrUserNotFound) {
 			t.Errorf("got error %v, want %v", err, service.ErrUserNotFound)
 		}
 	})
@@ -167,7 +168,7 @@ func TestUserService_GetByEmail(t *testing.T) {
 		}
 		svc := service.NewUserService(repo, hasher)
 		_, err := svc.GetByEmail(context.Background(), user.Email)
-		if err != service.ErrUserNotFound {
+		if !errors.Is(err, service.ErrUserNotFound) {
 			t.Errorf("got error %v, want %v", err, service.ErrUserNotFound)
 		}
 	})
@@ -200,7 +201,7 @@ func TestUserService_Update(t *testing.T) {
 		}
 		svc := service.NewUserService(repo, hasher)
 		err := svc.Update(context.Background(), 67, 67, "testuser", "test@mail.com", "hashed_password123")
-		if err != service.ErrUserNotFound {
+		if !errors.Is(err, service.ErrUserNotFound) {
 			t.Errorf("got error %v, want %v", err, service.ErrUserNotFound)
 		}
 	})
@@ -212,7 +213,7 @@ func TestUserService_Update(t *testing.T) {
 		}
 		svc := service.NewUserService(repo, hasher)
 		err := svc.Update(context.Background(), 52, 67, "testuser", "test@mail.com", "")
-		if err != service.ErrMethodNotAllowed {
+		if !errors.Is(err, service.ErrMethodNotAllowed) {
 			t.Errorf("got error %v, want %v", err, service.ErrMethodNotAllowed)
 		}
 	})
@@ -242,7 +243,7 @@ func TestUserService_Delete(t *testing.T) {
 		}
 		svc := service.NewUserService(repo, hasher)
 		err := svc.Delete(context.Background(), 67, 67)
-		if err != service.ErrUserNotFound {
+		if !errors.Is(err, service.ErrUserNotFound) {
 			t.Errorf("got error %v, want %v", err, service.ErrUserNotFound)
 		}
 	})
@@ -254,7 +255,7 @@ func TestUserService_Delete(t *testing.T) {
 		}
 		svc := service.NewUserService(repo, hasher)
 		err := svc.Delete(context.Background(), 52, 67)
-		if err != service.ErrMethodNotAllowed {
+		if !errors.Is(err, service.ErrMethodNotAllowed) {
 			t.Errorf("got error %v, want %v", err, service.ErrMethodNotAllowed)
 		}
 	})

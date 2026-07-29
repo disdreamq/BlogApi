@@ -3,6 +3,7 @@ package integration
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -91,7 +92,7 @@ func TestPostRepository_GetByID(t *testing.T) {
 		repo := postgres.NewPostRepository(db)
 
 		_, err := repo.GetByID(ctx, 67)
-		if err != sql.ErrNoRows {
+		if !errors.Is(err, sql.ErrNoRows) {
 			t.Fatalf("wanted no rows error, got: %v", err)
 		}
 	})
@@ -136,7 +137,7 @@ func TestPostRepository_GetByTitle(t *testing.T) {
 		repo := postgres.NewPostRepository(db)
 
 		_, err := repo.GetByTitle(ctx, "non-existent-title")
-		if err != sql.ErrNoRows {
+		if !errors.Is(err, sql.ErrNoRows) {
 			t.Fatalf("wanted no rows error, got: %v", err)
 		}
 	})
@@ -263,7 +264,7 @@ func TestPostRepository_Update(t *testing.T) {
 			Content: "Updated Content",
 		}
 		err := repo.Update(ctx, postToUpdate)
-		if err != postgres.ErrNoRows {
+		if !errors.Is(err, postgres.ErrNoRows) {
 			t.Fatalf("wanted no rows affected error, got: %v", err)
 		}
 	})
@@ -347,7 +348,7 @@ func TestPostRepository_UpdateWithValidate(t *testing.T) {
 			Content: "Updated Content",
 		}
 		err = repo.UpdateWithValidate(ctx, createdUser2.ID, postToUpdate)
-		if err != postgres.ErrNoRows {
+		if !errors.Is(err, postgres.ErrNoRows) {
 			t.Fatalf("wanted no rows affected error (non-owner), got: %v", err)
 		}
 		t.Cleanup(func() { _, _ = repo.Delete(ctx, createdPost.ID) })
@@ -365,7 +366,7 @@ func TestPostRepository_UpdateWithValidate(t *testing.T) {
 			Content: "Updated Content",
 		}
 		err := repo.UpdateWithValidate(ctx, 1, postToUpdate)
-		if err != postgres.ErrNoRows {
+		if !errors.Is(err, postgres.ErrNoRows) {
 			t.Fatalf("wanted no rows affected error, got: %v", err)
 		}
 	})
@@ -402,7 +403,7 @@ func TestPostRepository_Delete(t *testing.T) {
 			t.Fatalf("expected title %q, got %q", createdPost.Title, title)
 		}
 		_, err = repo.GetByID(ctx, createdPost.ID)
-		if err != sql.ErrNoRows {
+		if !errors.Is(err, sql.ErrNoRows) {
 			t.Fatalf("wanted no rows error, got: %v", err)
 		}
 	})
@@ -413,7 +414,7 @@ func TestPostRepository_Delete(t *testing.T) {
 		repo := postgres.NewPostRepository(db)
 
 		_, err := repo.Delete(ctx, 67)
-		if err != sql.ErrNoRows {
+		if !errors.Is(err, sql.ErrNoRows) {
 			t.Fatalf("wanted no rows error, got: %v", err)
 		}
 	})
@@ -450,7 +451,7 @@ func TestPostRepository_DeleteWithValidate(t *testing.T) {
 			t.Fatalf("expected title %q, got %q", createdPost.Title, title)
 		}
 		_, err = repo.GetByID(ctx, createdPost.ID)
-		if err != sql.ErrNoRows {
+		if !errors.Is(err, sql.ErrNoRows) {
 			t.Fatalf("wanted no rows error, got: %v", err)
 		}
 	})
@@ -484,7 +485,7 @@ func TestPostRepository_DeleteWithValidate(t *testing.T) {
 		}
 
 		_, err = repo.DeleteWithValidate(ctx, createdUser2.ID, createdPost.ID)
-		if err != sql.ErrNoRows {
+		if !errors.Is(err, sql.ErrNoRows) {
 			t.Fatalf("wanted no rows error (non-owner), got: %v", err)
 		}
 		t.Cleanup(func() { _, _ = repo.Delete(ctx, createdPost.ID) })
@@ -496,7 +497,7 @@ func TestPostRepository_DeleteWithValidate(t *testing.T) {
 		repo := postgres.NewPostRepository(db)
 
 		_, err := repo.DeleteWithValidate(ctx, 1, 67)
-		if err != sql.ErrNoRows {
+		if !errors.Is(err, sql.ErrNoRows) {
 			t.Fatalf("wanted no rows error, got: %v", err)
 		}
 	})
