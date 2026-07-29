@@ -104,10 +104,14 @@ func (r *PostRepository) ReadAllUserPosts(ctx context.Context, userID int64) ([]
 		SELECT * FROM posts
 		WHERE user_id = $1
 	`
-	var posts []*domain.Post
-	err := r.db.SelectContext(txCtx, &posts, query, userID)
+	var dbPosts []dbPost
+	err := r.db.SelectContext(txCtx, &dbPosts, query, userID)
 	if err != nil {
 		return nil, err
+	}
+	posts := make([]*domain.Post, len(dbPosts))
+	for i, p := range dbPosts {
+		posts[i] = p.toDomain()
 	}
 	return posts, nil
 }
@@ -126,10 +130,16 @@ func (r *PostRepository) Update(ctx context.Context, post *domain.Post) error {
 		UPDATE posts SET title = $1, content = $2
 		WHERE id = $3
 	`
-	var postRow dbPost
-	err = tx.GetContext(txCtx, &postRow, query, post.Title, post.Content, post.ID)
+	result, err := tx.ExecContext(txCtx, query, post.Title, post.Content, post.ID)
 	if err != nil {
 		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return ErrNoRows
 	}
 
 	if err = tx.Commit(); err != nil {
@@ -149,9 +159,16 @@ func (r *PostRepository) UpdateWithValidate(ctx context.Context, currUserID int6
 
 	query := `UPDATE posts SET title = $1, content = $2
 			  WHERE id = $3 AND user_id = $4`
-	err = tx.QueryRowContext(txCtx, query, post.Title, post.Content, post.ID, currUserID).Scan()
+	result, err := tx.ExecContext(txCtx, query, post.Title, post.Content, post.ID, currUserID)
 	if err != nil {
 		return err
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return ErrNoRows
 	}
 
 	if err = tx.Commit(); err != nil {
