@@ -9,14 +9,23 @@ import (
 )
 
 var testDB *TestDatabase
+var testCache *TestCache
 
 func TestMain(m *testing.M) {
 	testDB = startTestDatabase()
+	testCache = startTestCache()
 
 	code := m.Run()
 
 	if testDB.DB != nil {
 		testDB.DB.Close()
+	}
+
+	if testDB.Container != nil {
+		testDB.Container.Terminate(context.Background())
+	}
+	if testCache.Container != nil {
+		testCache.Container.Terminate(context.Background())
 	}
 
 	os.Exit(code)
@@ -34,4 +43,13 @@ func startTestDatabase() *TestDatabase {
 	}
 
 	return testDB
+}
+
+func startTestCache() *TestCache {
+	ctx := context.Background()
+	testCache, err := StartRedisContainer(ctx)
+	if err != nil {
+		panic("failed to start redis container: " + err.Error())
+	}
+	return testCache
 }
