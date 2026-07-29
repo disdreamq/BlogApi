@@ -22,7 +22,7 @@ func NewPostService(postRepo port.PostRepository, cache port.Cache) *PostService
 }
 
 func (p *PostService) Create(ctx context.Context, userID int64, title, content string) (*domain.Post, error) {
-	domainPost, err := domain.NewPost(0, userID, title, content)
+	domainPost, err := domain.NewPost(userID, title, content)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +119,8 @@ func (p *PostService) GetByTitle(ctx context.Context, title string) (*domain.Pos
 }
 
 func (p *PostService) UpdateWithValidate(ctx context.Context, currUserID, postID int64, title, content string) error {
-	post, err := domain.NewPost(postID, currUserID, title, content)
+	post, err := domain.NewPost(currUserID, title, content)
+	post.ID = postID
 	if err != nil {
 		return err
 	}
@@ -145,7 +146,8 @@ func (p *PostService) UpdateWithValidate(ctx context.Context, currUserID, postID
 }
 
 func (p *PostService) Update(ctx context.Context, postID int64, title, content string) error {
-	post, err := domain.NewPost(postID, 0, title, content)
+	post, err := domain.NewPost(0, title, content)
+	post.ID = postID
 	if err != nil {
 		return err
 	}
