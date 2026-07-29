@@ -21,7 +21,6 @@ type TestDatabase struct {
 }
 
 func StartPostgresContainer(ctx context.Context) (*TestDatabase, error) {
-	// 1. Запуск контейнера с комбинированной wait-стратегией
 	pgContainer, err := postgres.Run(ctx,
 		"postgres:17-alpine",
 		postgres.WithDatabase("testdb"),
@@ -29,7 +28,7 @@ func StartPostgresContainer(ctx context.Context) (*TestDatabase, error) {
 		postgres.WithPassword("testpass"),
 		testcontainers.WithWaitStrategy(
 			wait.ForListeningPort("5432/tcp"),
-			wait.ForLog("database system is ready to accept connections").WithStartupTimeout(120*time.Second)))
+			wait.ForLog("database system is ready to accept connections").WithStartupTimeout(180*time.Second)))
 	if err != nil {
 		return nil, fmt.Errorf("failed to start postgres container: %w", err)
 	}
