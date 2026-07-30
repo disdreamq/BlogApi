@@ -94,9 +94,11 @@ func main() {
 	logger.Info().Msg("Starting the application.")
 
 	// Load cfg
-	err := godotenv.Load()
-	if err != nil {
-		logger.Fatal().Err(err).Msg("Fatal error during parse env file.")
+	if _, err := os.Stat(".env"); err == nil {
+		err := godotenv.Load()
+		if err != nil {
+			logger.Fatal().Err(err).Msg("Fatal error during parse env file.")
+		}
 	}
 	cfg := config.Load()
 
