@@ -89,7 +89,7 @@ func (u *UserService) GetByEmail(ctx context.Context, email string) (*domain.Use
 }
 
 func (u *UserService) Update(ctx context.Context, currUserID, userID int64, username, email, password string) error {
-	if ok := u.validateCurrUser(ctx, currUserID, userID); !ok {
+	if ok := u.validateCurrUser(currUserID, userID); !ok {
 		return ErrMethodNotAllowed
 	}
 	passwordHash, err := processPassword(password, u.hasher)
@@ -123,7 +123,7 @@ func (u *UserService) Update(ctx context.Context, currUserID, userID int64, user
 }
 
 func (u *UserService) Delete(ctx context.Context, currUserID int64, userID int64) error {
-	if ok := u.validateCurrUser(ctx, currUserID, userID); !ok {
+	if ok := u.validateCurrUser(currUserID, userID); !ok {
 		return ErrMethodNotAllowed
 	}
 	err := u.userRepo.Delete(ctx, userID)
@@ -145,24 +145,10 @@ func (u *UserService) Delete(ctx context.Context, currUserID int64, userID int64
 		Msg("Delete user.")
 	return nil
 }
-func (u *UserService) validateCurrUser(ctx context.Context, currUserID, userID int64) bool {
-	logger := log.Ctx(ctx)
-	trace_id, _ := ctx.Value("trace_id").(string)
-
+func (u *UserService) validateCurrUser(currUserID, userID int64) bool {
 	if userID != currUserID {
-		logger.Debug().
-			Str("trace_id", trace_id).
-			Int64("current_user_id", currUserID).
-			Int64("user_id", userID).
-			Msg("Validation failed for user.")
 		return false
 	}
-
-	logger.Debug().
-		Str("trace_id", trace_id).
-		Int64("current_user_id", currUserID).
-		Int64("user_id", userID).
-		Msg("Validate user.")
 	return true
 }
 

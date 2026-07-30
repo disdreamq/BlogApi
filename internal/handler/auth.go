@@ -39,7 +39,7 @@ func NewAuthController(authService port.AuthService) *AuthController {
 
 // Login handles user login and returns a JWT token
 // @Summary      Login to the blog
-// @Description  Authenticates a user by email and password and returns a JWT token
+// @Description  Authenticates a user by email and password and returns a JWT access token (valid for 1 hour)
 // @Tags         auth
 // @Accept       json
 // @Produce      json
@@ -48,6 +48,7 @@ func NewAuthController(authService port.AuthService) *AuthController {
 // @Failure      400      {object}  ErrorResponse  "invalid JSON"
 // @Failure      401      {object}  ErrorResponse  "wrong password / can not login"
 // @Failure      404      {object}  ErrorResponse  "user not found"
+// @Failure      429      {object}  ErrorResponse  "rate limit exceeded"
 // @Failure      500      {object}  ErrorResponse  "internal server error"
 // @Router       /login [post]
 func (a *AuthController) Login(w http.ResponseWriter, r *http.Request) {

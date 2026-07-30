@@ -47,16 +47,17 @@ func NewPostController(postService port.PostService) *PostController {
 
 // Create handles creating a new post
 // @Summary      Create a new post
-// @Description  Creates a new post for the authenticated user (requires authentication)
+// @Description  Creates a new post for the authenticated user (requires authentication). Title max 100 chars, content max 1000 chars.
 // @Tags         posts
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body      CreatePostRequest  true  "Post data"
-// @Success      201      {object}  PostResponse
+// @Param        request  body      createPostRequest  true  "Post data"
+// @Success      201      {object}  postResponse
 // @Failure      400      {object} ErrorResponse  "invalid JSON / invalid title or content"
 // @Failure      401      {object} ErrorResponse  "unauthorized"
-// @Failure      409      {object} ErrorResponse  "linked user with this id doesnt exists"
+// @Failure      409      {object} ErrorResponse  "linked user does not exist"
+// @Failure      429      {object} ErrorResponse  "rate limit exceeded"
 // @Failure      500      {object} ErrorResponse  "failed to create post"
 // @Router       /posts/ [post]
 func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
@@ -66,7 +67,11 @@ func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error": "invalid JSON"}`, http.StatusBadRequest)
 		return
 	}
-	UserID, _ := r.Context().Value("userID").(int64)
+	UserID, ok := r.Context().Value("userID").(int64)
+	if !ok {
+		http.Error(w, `{"error": "invalid user context"}`, http.StatusBadRequest)
+		return
+	}
 	post, err := c.postService.Create(r.Context(), UserID, postReq.Title, postReq.Content)
 	if err != nil {
 		switch err {
@@ -77,10 +82,10 @@ func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, `{"error": "linked user with this id doesnt exists."}`, http.StatusConflict)
 			return
 		case domain.ErrInvalidTitle:
-			http.Error(w, `{"error": "title must contain at least 1 character"`, http.StatusBadRequest)
+			http.Error(w, `{"error": "title must contain at least 1 character"}`, http.StatusBadRequest)
 			return
 		case domain.ErrInvalidContent:
-			http.Error(w, `{"error": "content must contain at least 1 character"`, http.StatusBadRequest)
+			http.Error(w, `{"error": "content must contain at least 1 character"}`, http.StatusBadRequest)
 			return
 		default:
 			http.Error(w, `{"error": "failed to create post"}`, http.StatusBadRequest)
@@ -94,15 +99,15 @@ func (c *PostController) Create(w http.ResponseWriter, r *http.Request) {
 
 // GetByID retrieves a post by its ID
 // @Summary      Get post by ID
-// @Description  Returns a single post by its ID (requires authentication)
+// @Description  Returns a single post by its ID. This endpoint is public (no authentication required). Uses cache-aside pattern with 10 min TTL.
 // @Tags         posts
 // @Accept       json
 // @Produce      json
-// @Param        postID  path      int  true  "Post ID"
-// @Success      200     {object}  PostResponse
+// @Param        postID  path      int64  true  "Post ID"
+// @Success      200     {object}  postResponse
 // @Failure      400     {object} ErrorResponse  "invalid post ID"
-// @Failure      401     {object} ErrorResponse  "unauthorized"
 // @Failure      404     {object} ErrorResponse  "post not found"
+// @Failure      429     {object} ErrorResponse  "rate limit exceeded"
 // @Failure      500     {object} ErrorResponse  "failed to get post"
 // @Router       /posts/id/{postID} [get]
 func (c *PostController) GetByID(w http.ResponseWriter, r *http.Request) {
@@ -130,15 +135,15 @@ func (c *PostController) GetByID(w http.ResponseWriter, r *http.Request) {
 
 // GetByTitle retrieves a post by its title
 // @Summary      Get post by title
-// @Description  Returns a single post by its title (requires authentication)
+// @Description  Returns a single post by its title. This endpoint is public (no authentication required). Uses cache-aside pattern with 10 min TTL.
 // @Tags         posts
 // @Accept       json
 // @Produce      json
-// @Param        title   path      string  true  "Post Title"
-// @Success      200     {object}  PostResponse
+// @Param        title   path      string  true  "Post Title (URL-encoded)"
+// @Success      200     {object}  postResponse
 // @Failure      400     {object} ErrorResponse  "invalid post title / failed to get post"
-// @Failure      401     {object} ErrorResponse  "unauthorized"
 // @Failure      404     {object} ErrorResponse  "post not found"
+// @Failure      429     {object} ErrorResponse  "rate limit exceeded"
 // @Router       /posts/title/{title} [get]
 func (c *PostController) GetByTitle(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
@@ -170,18 +175,20 @@ func (c *PostController) GetByTitle(w http.ResponseWriter, r *http.Request) {
 
 // Update updates an existing post
 // @Summary      Update a post
-// @Description  Updates an existing post by ID (requires authentication)
+// @Description  Updates an existing post by ID. Only the author can update their post (requires authentication). Title max 100 chars, content max 1000 chars.
 // @Tags         posts
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        postID    path      int                true  "Post ID"
-// @Param        request   body      UpdatePostRequest  true  "Post data to update"
-// @Success      200       {string} string             "OK"
-// @Failure      400       {object} ErrorResponse      "invalid post ID / invalid JSON / invalid user ID"
-// @Failure      401       {object} ErrorResponse      "unauthorized"
-// @Failure      404       {object} ErrorResponse      "user not found"
-// @Failure      500       {object} ErrorResponse      "failed to get post"
+// @Param        postID    path      int64             true  "Post ID"
+// @Param        request   body      updatePostRequest true  "Post data to update"
+// @Success      200       {string}  string            "OK"
+// @Failure      400       {object} ErrorResponse     "invalid post ID / invalid JSON / invalid title or content"
+// @Failure      401       {object} ErrorResponse     "unauthorized"
+// @Failure      403       {object} ErrorResponse     "forbidden: can only update own posts"
+// @Failure      404       {object} ErrorResponse     "post not found"
+// @Failure      429       {object} ErrorResponse     "rate limit exceeded"
+// @Failure      500       {object} ErrorResponse     "failed to update post"
 // @Router       /posts/{postID} [put]
 func (c *PostController) Update(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
@@ -212,17 +219,19 @@ func (c *PostController) Update(w http.ResponseWriter, r *http.Request) {
 
 // Delete removes a post by ID
 // @Summary      Delete a post
-// @Description  Removes a post by ID (requires authentication)
+// @Description  Removes a post by ID. Only the author can delete their post (requires authentication).
 // @Tags         posts
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        postID  path      int  true  "Post ID"
+// @Param        postID  path      int64  true  "Post ID"
 // @Success      204     {string} string  "No Content"
 // @Failure      400     {object} ErrorResponse  "invalid post ID / invalid user ID"
 // @Failure      401     {object} ErrorResponse  "unauthorized"
+// @Failure      403     {object} ErrorResponse  "forbidden: can only delete own posts"
 // @Failure      404     {object} ErrorResponse  "post not found"
-// @Failure      500     {object} ErrorResponse  "failed to get post"
+// @Failure      429     {object} ErrorResponse  "rate limit exceeded"
+// @Failure      500     {object} ErrorResponse  "failed to delete post"
 // @Router       /posts/{postID} [delete]
 func (c *PostController) Delete(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()

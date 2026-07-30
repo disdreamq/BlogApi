@@ -1,13 +1,13 @@
 // @title           Blog API
 // @version         1.0
-// @description     REST API для блога с авторизацией, управлением пользователями и постами
+// @description     REST API for blog with authentication, user management and posts. No feed timeline.
 // @host            localhost:8080
 // @BasePath        /
 // @schemes         http
 // @securityDefinitions.apikey BearerAuth
-// @in                        header
-// @name                      Authorization
-// @description               Введите токен в формате: Bearer <ваш_токен>
+// @in                         header
+// @name                       Authorization
+// @description                Enter token in format: Bearer <your_token>
 
 package main
 

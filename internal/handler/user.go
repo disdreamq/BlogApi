@@ -52,15 +52,15 @@ func NewUserController(userService port.UserService) *UserController {
 
 // Create handles user registration
 // @Summary      Register a new user
-// @Description  Creates a new user account
+// @Description  Creates a new user account with username, email and bcrypt-hashed password. Returns 409 if email already exists.
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Param        request  body      CreateUserRequest  true  "User registration data"
-// @Success      201      {object}  UserResponse
-// @Failure      400      {object}  ErrorResponse  "invalid JSON"
+// @Param        request  body      createUserRequest  true  "User registration data"
+// @Success      201      {object}  userResponse
+// @Failure      400      {object}  ErrorResponse  "invalid JSON / invalid username or email"
 // @Failure      409      {object}  ErrorResponse  "user with this email already exists"
-// @Failure      404      {object}  ErrorResponse  "user not found"
+// @Failure      429      {object}  ErrorResponse  "rate limit exceeded"
 // @Failure      500      {object}  ErrorResponse  "failed to create user"
 // @Router       /register [post]
 func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
@@ -96,8 +96,8 @@ func (c *UserController) Create(w http.ResponseWriter, r *http.Request) {
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        userID  path      int  true  "User ID"
-// @Success      200     {object}  UserResponse
+// @Param        userID  path      int64  true  "User ID"
+// @Success      200     {object}  userResponse
 // @Failure      400     {object}  ErrorResponse  "invalid user ID"
 // @Failure      401     {object}  ErrorResponse  "unauthorized"
 // @Failure      404     {object}  ErrorResponse  "user not found"
@@ -133,8 +133,8 @@ func (c *UserController) GetByID(w http.ResponseWriter, r *http.Request) {
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        email  path      string  true  "User Email"
-// @Success      200    {object}  UserResponse
+// @Param        email  path      string  true  "User Email (URL-encoded)"
+// @Success      200    {object}  userResponse
 // @Failure      400    {object}  ErrorResponse  "failed to get user"
 // @Failure      401    {object}  ErrorResponse  "unauthorized"
 // @Failure      404    {object}  ErrorResponse  "user not found"
@@ -165,18 +165,19 @@ func (c *UserController) GetByEmail(w http.ResponseWriter, r *http.Request) {
 
 // Update updates an existing user
 // @Summary      Update a user
-// @Description  Updates an existing user by ID (requires authentication)
+// @Description  Updates an existing user by ID. User can only update their own profile (requires authentication). Password is re-hashed with bcrypt.
 // @Tags         users
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        userID    path      int                  true  "User ID"
-// @Param        request   body      UpdateUserRequest    true  "User data to update"
-// @Success      200       {string} string               "OK"
-// @Failure      400       {object} ErrorResponse        "invalid user ID / invalid JSON"
-// @Failure      401       {object} ErrorResponse        "unauthorized"
-// @Failure      404       {object} ErrorResponse        "user not found"
-// @Failure      500       {object} ErrorResponse        "failed to get user"
+// @Param        userID    path      int64             true  "User ID"
+// @Param        request   body      updateUserRequest true  "User data to update"
+// @Success      200       {string}  string            "OK"
+// @Failure      400       {object} ErrorResponse     "invalid user ID / invalid JSON"
+// @Failure      401       {object} ErrorResponse     "unauthorized"
+// @Failure      403       {object} ErrorResponse     "forbidden: can only update own profile"
+// @Failure      404       {object} ErrorResponse     "user not found"
+// @Failure      500       {object} ErrorResponse     "failed to update user"
 // @Router       /users/{userID} [put]
 func (c *UserController) Update(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
@@ -212,17 +213,18 @@ func (c *UserController) Update(w http.ResponseWriter, r *http.Request) {
 
 // Delete removes a user by ID
 // @Summary      Delete a user
-// @Description  Removes a user by ID (requires authentication)
+// @Description  Removes a user by ID. User can only delete their own profile (requires authentication).
 // @Tags         users
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        userID  path      int  true  "User ID"
+// @Param        userID  path      int64  true  "User ID"
 // @Success      204     {string} string  "No Content"
 // @Failure      400     {object} ErrorResponse  "invalid user ID"
 // @Failure      401     {object} ErrorResponse  "unauthorized"
+// @Failure      403     {object} ErrorResponse  "forbidden: can only delete own profile"
 // @Failure      404     {object} ErrorResponse  "user not found"
-// @Failure      500     {object} ErrorResponse  "failed to get user"
+// @Failure      500     {object} ErrorResponse  "failed to delete user"
 // @Router       /users/{userID} [delete]
 func (c *UserController) Delete(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
